@@ -1,0 +1,8 @@
+# 本行为注释
+.DS_Store
+.idea/
+.idea/          # 忽略仓库中所有.idea 目录
+/.idea/         # 忽略仓库中根目录下的.idea 目录
+/.settings      # 忽略仓库中根目录下的 .settings 文件或目录
+~'$'*.docx      # office 打开时生成的临时文件
+proto/*.go
