@@ -53,5 +53,5 @@ func MainModeGateway() {
 	{
 		v1.GET("/:session_id", fetchSession) // const SESSION_ID = "ID10006666"  // curl localhost:8080/api/v1/session/ID10006666
 	}
-	router.Run(":8081")
+	router.Run(":18081")
 }
