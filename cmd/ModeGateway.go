@@ -60,6 +60,7 @@ func MainModeGateway() {
 				Message:   "ERR_NOT_FOUND",
 			}
 			c.JSON(200, body)
+			return
 		}
 		log.Println("palyload:", palyload)
 		data := api.QueryStatusResp{Payload: palyload}
