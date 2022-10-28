@@ -5,21 +5,26 @@ import (
 	"fmt"
 	"github.com/message/api/domain"
 	"github.com/message/config"
+	idomain "github.com/message/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"strconv"
 	"time"
 )
 
-var collection *mongo.Collection
+const ( // QueryStatus
+	ERR_OK           = 0
+	ERR_NOT_FOUND    = 1404
+	ERR_INVALID_PARA = 1500
+	ERR_OTHER        = 1999
+)
+
+var collection_log *mongo.Collection
+var collection_status *mongo.Collection
 
 var s_ctx context.Context
-
-const (
-	ERR_OK           = 0
-	ERR_INVALID_PARA = 1
-)
 
 // DB static connection
 func InitMongo() {
@@ -31,14 +36,6 @@ func InitMongo() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//
-	//defer func() {
-	//	if err = client.Disconnect(s_ctx); err != nil {
-	//		panic(err)
-	//	} else {
-	//		fmt.Println("Connection to MongoDB closed.")
-	//	}
-	//}()
 
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
@@ -47,7 +44,8 @@ func InitMongo() {
 	fmt.Println("Ping OK")
 
 	// biz code below . . .
-	collection = client.Database(config.DATABASE).Collection(config.COLLECTION)
+	collection_log = client.Database(config.DATABASE).Collection(config.COLLECTION_LOG)
+	collection_status = client.Database(config.DATABASE).Collection(config.COLLECTION_STATUS)
 }
 
 // pageID: 1,2,3,4....N
@@ -56,7 +54,7 @@ func GetSessionProfile(ctx context.Context, sessionID string, pageID int, pageSi
 
 	log.Printf("sessionID %s, pageID %d, size %d", sessionID, pageID, pageSize)
 
-	cnt, _ := collection.CountDocuments(ctx, filter)
+	cnt, _ := collection_log.CountDocuments(ctx, filter)
 	fmt.Println("GetSessionProfile cnt: ", cnt)
 
 	// 简略查询模式,直接返回记录数量
@@ -65,7 +63,7 @@ func GetSessionProfile(ctx context.Context, sessionID string, pageID int, pageSi
 	}
 
 	if cnt == 0 {
-		return ERR_INVALID_PARA, 0, nil
+		return ERR_NOT_FOUND, 0, nil
 	}
 
 	findOpts := options.Find().SetSort(bson.D{{"timestamp", 1}}) // 1升序，-1降序
@@ -74,7 +72,7 @@ func GetSessionProfile(ctx context.Context, sessionID string, pageID int, pageSi
 		findOpts.SetSkip(int64(pageSize*pageID - pageSize))
 	}
 	//filter := bson.M{"session_id": session_id}
-	findCursor, err := collection.Find(ctx, filter, findOpts)
+	findCursor, err := collection_log.Find(ctx, filter, findOpts)
 	var results []bson.Raw
 	if err = findCursor.All(ctx, &results); err != nil {
 		log.Fatal(err)
@@ -89,11 +87,39 @@ func GetSessionProfile(ctx context.Context, sessionID string, pageID int, pageSi
 		}
 		//fmt.Println("value: ", value)
 		//fmt.Printf(" session_id: %s, timetamp: %d, payload: %v\n", value.SessionID, value.Timestamp, value.Payload)
-		fmt.Printf("type: %d, timestamp:%d, payload:\n", value.Type, value.TimeStamp)
+		log.Printf("type: %d, timestamp:%d, payload:\n", value.Type, value.TimeStamp)
 		//
 		records = append(records, value)
 	}
 
 	cnt = int64(len(results))
 	return ERR_OK, cnt, records
+}
+
+func GetSessionStatus(ctx context.Context, sessionID string, evtType string) (error int, payload string) {
+	evtTypeI, _ := strconv.Atoi(evtType)
+	filter := bson.M{"session_id": sessionID, "evt_type": evtTypeI}
+	cnt, _ := collection_status.CountDocuments(ctx, filter)
+	log.Println("GetSessionStatus cnt: ", cnt)
+
+	log.Printf("session_id %s,  evt_type: %s ", sessionID, evtType)
+	findCursor, err := collection_status.Find(ctx, filter)
+	var results []bson.Raw
+	if err = findCursor.All(ctx, &results); err != nil {
+		log.Fatal(err)
+	}
+
+	for id, result := range results {
+		log.Printf("id: %d, result: %v ", id, result)
+		value := idomain.UpdateSessionStatus{}
+		err2 := bson.Unmarshal([]byte(result), &value)
+		log.Printf("Payload: %v ", value)
+
+		if err2 != nil {
+			panic(err)
+		}
+		return ERR_OK, value.Payload.(string)
+	}
+
+	return ERR_NOT_FOUND, ""
 }

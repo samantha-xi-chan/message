@@ -15,7 +15,7 @@ import (
 )
 
 func MainModeSink() {
-	//msgs_high := QueueConnInit(define.EXCHANGE_HIGH)
+	msgs_high, _ := QueueConnInit(config.EXCHANGE_HIGH)
 	msgs_normal, _ := QueueConnInit(config.EXCHANGE_NORMAL)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -40,11 +40,8 @@ func MainModeSink() {
 	fmt.Println("Ping OK")
 
 	// biz code below . . .
-	collection := client.Database(config.DATABASE).Collection(config.COLLECTION)
-
-	// 监听待推送的信息队列
+	collection_log := client.Database(config.DATABASE).Collection(config.COLLECTION_LOG)
 	go func() {
-
 		for d := range msgs_normal {
 			log.Printf("接收消息=%s", d.Body)
 
@@ -56,13 +53,29 @@ func MainModeSink() {
 			// 落盘
 			ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
-			res, _ := collection.InsertOne(ctx,
+			res, _ := collection_log.InsertOne(ctx,
 				bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload})
 			fmt.Printf("res.InsertedID: %v\n", res.InsertedID)
-
 		}
 	}()
 
-	forever := make(chan bool)
-	<-forever
+	collection_status := client.Database(config.DATABASE).Collection(config.COLLECTION_STATUS)
+	go func() {
+		for d := range msgs_high {
+			log.Printf("接收消息=%s", d.Body)
+
+			info := domain.UpdateSessionStatus{}
+			json.Unmarshal(d.Body, &info)
+
+			fmt.Printf("Unmarshal result: %v\n", info)
+
+			ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			res, _ := collection_status.InsertOne(ctx,
+				bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload})
+			fmt.Printf("res.InsertedID: %v\n", res.InsertedID)
+		}
+	}()
+
+	select {}
 }
