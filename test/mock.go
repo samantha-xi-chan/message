@@ -13,15 +13,16 @@ import (
 )
 
 const (
-	address     = "192.168.31.24:50051"
+	address = "192.168.31.43:10051"
+	//address     = "localhost:10051"
 	defaultName = "IamClient"
 
-	SessionID6 = "ID29"
+	SessionID6 = "ID88"
 	//SessionID6 = "ID10006666"
 )
 
 func main() {
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 1; i++ {
 		send()
 		time.Sleep(time.Millisecond * 10)
 	}
@@ -54,7 +55,7 @@ func send() {
 	}
 
 	// 任务过程中的细节变化
-	for i := 0; i <= 200000; i++ {
+	for i := 0; i <= 2; i++ {
 		tick := time.Now().UnixNano() / 1e6
 		biz := apidomain.BizMsg{
 			Type:      apidomain.CASE_CHANGE, // 1001表示用例变化 ， 1002表示用例内的报文日志
@@ -77,7 +78,7 @@ func send() {
 
 	// 任务结束通知
 	{
-		r, err := c.UpdateSessionStatus(ctx, &pb.UpdateSessionStatusReq{SessionId: SessionID6, Timestamp: time.Now().UnixNano() / 1e6, EvtType: domain.SESSION_END})
+		r, err := c.UpdateSessionStatus(ctx, &pb.UpdateSessionStatusReq{SessionId: SessionID6, Timestamp: time.Now().UnixNano() / 1e6, EvtType: domain.SESSION_END, Payload: "{\"exit_code\":0}"})
 		if err != nil {
 			log.Fatalf("could not greet: %v", err)
 		}

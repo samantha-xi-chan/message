@@ -15,6 +15,8 @@ func MainModeGateway() {
 	repo.InitMongo()
 
 	fetchSession := func(c *gin.Context) {
+		//  todo： 增加分页查询的保护，避免单次请求数据量过大
+
 		sessionID := c.Param("session_id")
 		pageID := c.Query("page_id")
 		pageSize := c.Query("page_size")
