@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/message/config"
+	"github.com/message/internal"
 	"github.com/message/internal/domain"
 	. "github.com/message/internal/service"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,7 +21,7 @@ func MainModeSink() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(internal.MONGO_URL))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,6 +42,35 @@ func MainModeSink() {
 
 	// biz code below . . .
 	collection_log := client.Database(config.DATABASE).Collection(config.COLLECTION_LOG)
+	res, err := collection_log.Indexes().CreateOne(context.Background(), mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "session_id", Value: 1},
+		},
+	})
+	if err != nil {
+		log.Fatal("Indexes().CreateOne err: ", err)
+	}
+	log.Println(res)
+	res, err = collection_log.Indexes().CreateOne(context.Background(), mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "timestamp", Value: 1},
+		},
+	})
+	if err != nil {
+		log.Fatal("Indexes().CreateOne err: ", err)
+	}
+	log.Println(res)
+	res, err = collection_log.Indexes().CreateOne(context.Background(), mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "session_id", Value: 1},
+			{Key: "timestamp", Value: 1},
+		},
+	})
+	if err != nil {
+		log.Fatal("Indexes().CreateOne err: ", err)
+	}
+	log.Println(res)
+
 	go func() {
 		for d := range msgs_normal {
 			log.Printf("接收消息=%s", d.Body)
@@ -60,6 +90,15 @@ func MainModeSink() {
 	}()
 
 	collection_status := client.Database(config.DATABASE).Collection(config.COLLECTION_STATUS)
+	res, err = collection_status.Indexes().CreateOne(context.Background(), mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "session_id", Value: 1},
+		},
+	})
+	if err != nil {
+		log.Fatal("Indexes().CreateOne err: ", err)
+	}
+	log.Println(res)
 	go func() {
 		for d := range msgs_high {
 			log.Printf("接收消息=%s", d.Body)

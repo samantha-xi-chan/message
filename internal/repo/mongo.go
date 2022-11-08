@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/message/api/domain"
 	"github.com/message/config"
+	"github.com/message/internal"
 	idomain "github.com/message/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -32,7 +33,7 @@ func InitMongo() {
 	s_ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
 	fmt.Println(cancel)
 	//defer cancel()
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(internal.MONGO_URL))
 	if err != nil {
 		log.Fatal(err)
 	}

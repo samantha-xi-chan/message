@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/message/internal"
 	"github.com/streadway/amqp"
 	"log"
 )
@@ -14,7 +15,7 @@ func failOnError(err error, msg string) {
 func QueueConnInit(exhange string) (channel <-chan amqp.Delivery, amqp_channel *amqp.Channel) {
 
 	// 连接rabbitmq
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial(internal.AMQP_URL)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	//defer conn.Close()
 
