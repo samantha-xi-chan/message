@@ -119,7 +119,7 @@ func MainModeNotify() {
 	}()
 
 	http.HandleFunc("/api/v1/socket", socketHandlerB)
-	log.Fatal(http.ListenAndServe(":18080", nil))
+	log.Fatal(http.ListenAndServe(":9102", nil))
 }
 
 func broadcast(bytes []byte) {
