@@ -3,9 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/Clouditera/message/api"
+	"github.com/Clouditera/message/internal/repo"
 	"github.com/gin-gonic/gin"
-	"github.com/message/api"
-	"github.com/message/internal/repo"
 	"log"
 	"strconv"
 	"strings"

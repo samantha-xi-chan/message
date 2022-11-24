@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"context"
-	pb "github.com/message/api/proto"
-	"github.com/message/internal/service"
+	pb "github.com/Clouditera/message/api/proto"
+	"github.com/Clouditera/message/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"

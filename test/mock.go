@@ -4,9 +4,9 @@ package main
 import (
 	"context"
 	"encoding/json"
-	apidomain "github.com/message/api/domain"
-	pb "github.com/message/api/proto"
-	"github.com/message/internal/domain"
+	apidomain "github.com/Clouditera/message/api/domain"
+	pb "github.com/Clouditera/message/api/proto"
+	"github.com/Clouditera/message/internal/domain"
 	"google.golang.org/grpc"
 	"log"
 	"time"

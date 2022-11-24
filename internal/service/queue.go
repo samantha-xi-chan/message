@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/message/internal"
+	"github.com/Clouditera/message/internal"
 	"github.com/streadway/amqp"
 	"log"
 )

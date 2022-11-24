@@ -3,12 +3,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	api "github.com/Clouditera/message/api/domain"
+	"github.com/Clouditera/message/config"
+	"github.com/Clouditera/message/internal/domain"
+	. "github.com/Clouditera/message/internal/service"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/gorilla/websocket"
-	api "github.com/message/api/domain"
-	"github.com/message/config"
-	"github.com/message/internal/domain"
-	. "github.com/message/internal/service"
 	"log"
 	"net/http"
 )

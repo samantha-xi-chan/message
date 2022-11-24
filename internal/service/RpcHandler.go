@@ -2,8 +2,8 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/message/config"
-	"github.com/message/internal/domain"
+	"github.com/Clouditera/message/config"
+	"github.com/Clouditera/message/internal/domain"
 	"github.com/streadway/amqp"
 	"log"
 )

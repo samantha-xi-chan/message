@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/message/cmd"
+	"github.com/Clouditera/message/cmd"
 	"log"
 	"net/http"
 )
