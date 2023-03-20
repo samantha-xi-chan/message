@@ -2,14 +2,15 @@ package main
 
 import (
 	"flag"
-	"github.com/Clouditera/message/cmd"
 	"log"
 	"net/http"
+
+	"github.com/Clouditera/message/cmd"
 )
 
 var _mode = flag.String("mode", "empty", "work mode")
 
-const (
+var (
 	BUILD_DATE = "RandSGVsbG8gV29ypm"
 	GIT_BRANCH = "RandBGQg2xzY2FXzGK"
 	GIT_COMMIT = "RandGZFka2xzGFkc2E"
