@@ -16,9 +16,9 @@ pb:
 	protoc api/proto/*.proto --go_out=plugins=grpc:.
 
 build:
-	@if [ -d bin ] ; then rm -rf ./bin ; fi
-	mkdir bin
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -v -ldflags "${LDFLAGS}" -o ${OUTPUT_DIR}/message
 
+all_platform:
 	@echo "Compiling for every OS and Platform"
 	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -v -ldflags "${LDFLAGS}" -o ${OUTPUT_DIR}/message_linux_amd64
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -v -ldflags "${LDFLAGS}" -o ${OUTPUT_DIR}//message_darwin_x86

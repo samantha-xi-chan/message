@@ -24,8 +24,9 @@ RUN apk del tzdata
 WORKDIR /prod/bin
 RUN apk update && apk add supervisor
 
-COPY --from=builder /build/bin/message_linux_amd64 /prod/bin/message
-COPY --from=builder /build/supervisorconf/*  /etc/supervisor/conf.d/
+COPY --from=builder /build/bin/message /prod/bin/message
+COPY --from=builder /build/script/wrapper.sh /prod/bin/wrapper.sh
+COPY --from=builder /build/supervisorconf/* /etc/supervisor/conf.d/
 COPY --from=builder /build/supervisorconf/supervisord.conf  /etc/supervisord.conf
 
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord.conf"]
