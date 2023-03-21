@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"context"
+	"log"
+	"net"
+
 	pb "github.com/Clouditera/message/api/proto"
 	"github.com/Clouditera/message/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"log"
-	"net"
 )
 
 const (
@@ -35,7 +36,9 @@ func MainModeWaiter() {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
+		return
 	}
+
 	s := grpc.NewServer()
 	pb.RegisterMessageServer(s, &server{})
 	// Register reflection service on gRPC server.

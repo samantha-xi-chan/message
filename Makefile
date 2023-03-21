@@ -5,14 +5,6 @@ OUTPUT_DIR:=./bin
 
 LDFLAGS:=-s -X main.BUILD_DATE=${BUILD_DATE} -X main.GIT_BRANCH=${BRNACH} -X main.GIT_COMMIT=${COMMIT_ID}
 
-ifneq (${MONGO_URL},)
-	LDFLAGS:=${LDFLAGS} -X internal.MONGO_URL=${MONGO_URL}
-endif
-
-ifneq (${AMQP_URL},)
-	LDFLAGS:=${LDFLAGS} -X internal.AMQP_URL=${AMQP_URL}
-endif
-
 .PHONY: all build run gotool clean help
 
 all: gotool build

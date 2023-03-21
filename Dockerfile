@@ -7,8 +7,6 @@ RUN apk add git make
 ENV CGO_ENABLED 0
 ENV GOPROXY https://goproxy.cn,direct
 ENV APP_NAME=message
-ENV MONGO_URL=mongodb://mongo:27017
-ENV AMQP_URL=amqp://guest:guest@rabbitmq:5672/
 
 WORKDIR /build
 ADD go.mod .

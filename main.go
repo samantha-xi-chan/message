@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"net/http"
 
 	"github.com/Clouditera/message/cmd"
 )
@@ -21,10 +20,6 @@ func main() {
 	log.Println("BUILD_DATE: ", BUILD_DATE)
 	log.Println("GIT_BRANCH: ", GIT_BRANCH)
 	log.Println("GIT_COMMIT: ", GIT_COMMIT)
-
-	go func() {
-		http.ListenAndServe("0.0.0.0:9999", nil)
-	}()
 
 	flag.Parse()
 
