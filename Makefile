@@ -1,9 +1,17 @@
 BUILD_DATE:=$(shell date '+%Y%m%d%H%M%S')
-BRNACH:=$(shell git rev-parse --abbrev-ref HEAD)
-COMMIT_ID:=$(shell git rev-parse HEAD)
+ifeq ($(strip $(BRANCH)),)
+    BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+else
+	BRANCH := $(BRANCH)
+endif
+ifeq ($(strip $(COMMIT_ID)),)
+    COMMIT_ID := $(shell git rev-parse --abbrev-ref HEAD)
+else
+	COMMIT_ID := $(COMMIT_ID)
+endif
 OUTPUT_DIR:=./bin
 
-LDFLAGS:=-s -X main.BUILD_DATE=${BUILD_DATE} -X main.GIT_BRANCH=${BRNACH} -X main.GIT_COMMIT=${COMMIT_ID}
+LDFLAGS:=-s -X main.BUILD_DATE=${BUILD_DATE} -X main.GIT_BRANCH=${BRANCH} -X main.GIT_COMMIT=${COMMIT_ID}
 
 .PHONY: all build run gotool clean help
 
@@ -16,7 +24,7 @@ pb:
 	protoc api/proto/*.proto --go_out=plugins=grpc:.
 
 build:
-	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -v -ldflags "${LDFLAGS}" -o ${OUTPUT_DIR}/message
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -buildvcs=false -v -ldflags "${LDFLAGS}" -o ${OUTPUT_DIR}/message
 
 all_platform:
 	@echo "Compiling for every OS and Platform"
