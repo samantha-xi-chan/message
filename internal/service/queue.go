@@ -1,9 +1,10 @@
 package service
 
 import (
+	"log"
+
 	"github.com/Clouditera/message/internal"
 	"github.com/streadway/amqp"
-	"log"
 )
 
 func failOnError(err error, msg string) {
