@@ -8,6 +8,7 @@ import (
 	"github.com/Clouditera/message/internal"
 	"github.com/Clouditera/message/internal/domain"
 	. "github.com/Clouditera/message/internal/service"
+	//"github.com/sirupsen/fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -15,13 +16,22 @@ import (
 	"time"
 )
 
+type LogEntry struct {
+	SessionID string
+	Timestamp int64
+	Payload   string
+}
+
+const TIMEOUT_SECOND = 99999
+const GC_INTERVAL_SECOND = 600
+
 func MainModeSink() {
 	msgs_high, _ := QueueConnInit(config.EXCHANGE_HIGH)
 	msgs_normal, _ := QueueConnInit(config.EXCHANGE_NORMAL)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(internal.MONGO_URL))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(internal.MONGO_URL).SetMaxPoolSize(100))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,18 +83,18 @@ func MainModeSink() {
 
 	go func() {
 		for d := range msgs_normal {
-			log.Printf("接收消息=%s", d.Body)
+			log.Printf("recv msgs_normal = %s", d.Body)
 
 			info := domain.FeedSessionStream{}
 			json.Unmarshal(d.Body, &info)
 
-			fmt.Printf("Unmarshal result: %v\n", info)
+			//fmt.Printf("Unmarshal result: %v\n", info)
 
 			// 落盘
-			ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
+			ctx, cancel = context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
 			defer cancel()
 			res, _ := collection_log.InsertOne(ctx,
-				bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload})
+				bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted": false})
 			fmt.Printf("res.InsertedID: %v\n", res.InsertedID)
 		}
 	}()
@@ -101,20 +111,108 @@ func MainModeSink() {
 	log.Println(res)
 	go func() {
 		for d := range msgs_high {
-			log.Printf("接收消息=%s", d.Body)
+			log.Printf("recv msgs_high =%s", d.Body)
 
 			info := domain.UpdateSessionStatus{}
 			json.Unmarshal(d.Body, &info)
 
-			fmt.Printf("Unmarshal result: %v\n", info)
+			//fmt.Printf("Unmarshal result: %v\n", info)
 
-			ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
+			ctx, cancel = context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
 			defer cancel()
 			res, _ := collection_status.InsertOne(ctx,
-				bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload})
+				bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted": false})
 			fmt.Printf("res.InsertedID: %v\n", res.InsertedID)
 		}
 	}()
+
+	fmt.Println("starting cron job")
+	//c := cron.New()
+	//e := c.AddFunc("*/3 * * * *", func() {
+	collection_log2 := client.Database(config.DATABASE).Collection(config.COLLECTION_LOG)
+	for true {
+		fmt.Print("cron func() running ")
+		var MAX_BUF_SIZE = 5000
+
+		ctx, cancel = context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
+		defer cancel()
+
+		// 构建聚合管道，按 session_id 分组，统计记录数量，并筛选出记录数量大于 5000 的 session_id
+		pipeline := []bson.M{
+			{
+				"$group": bson.M{
+					"_id":   "$session_id",
+					"count": bson.M{"$sum": 1},
+				},
+			},
+			{
+				"$match": bson.M{
+					"count": bson.M{"$gt": MAX_BUF_SIZE},
+				},
+			},
+		}
+
+		// 执行聚合操作
+		cursor, err := collection_log2.Aggregate(ctx, pipeline)
+		if err != nil {
+			fmt.Print("Aggregate err: ", err)
+		}
+
+		// 遍历结果
+		var sessionIDs []string
+		for cursor.Next(ctx) {
+			var result bson.M
+			err := cursor.Decode(&result)
+			if err != nil {
+				fmt.Println("Decode err: ", err)
+			}
+
+			sessionID := result["_id"].(string)
+			fmt.Println("trying to cleanup sessionID: ", sessionID)
+
+			//
+			{
+				findFilter := bson.M{"session_id": sessionID}
+				findOptions := options.Find().SetSort(bson.D{{"timestamp", -1}})
+				findCursor, err := collection_log2.Find(ctx, findFilter, findOptions)
+				if err != nil {
+					fmt.Println("Find err: ", err)
+				}
+
+				var recordsToDelete []LogEntry
+				for findCursor.Next(ctx) {
+					var logEntry LogEntry
+					err := findCursor.Decode(&logEntry)
+					if err != nil {
+						fmt.Println("Decode err: ", err)
+					}
+
+					recordsToDelete = append(recordsToDelete, logEntry)
+				}
+
+				// 只保留前 5000 条记录
+				if len(recordsToDelete) > MAX_BUF_SIZE {
+					recordsToDelete = recordsToDelete[MAX_BUF_SIZE:]
+				} else {
+					recordsToDelete = nil
+				}
+
+				// 删除 session_id 内的记录
+				for _, logEntry := range recordsToDelete {
+					deleteFilter := bson.M{"_id": logEntry.SessionID}
+					_, err := collection_log2.DeleteOne(ctx, deleteFilter)
+					if err != nil {
+						fmt.Println("DeleteOne err: ", err)
+					}
+				}
+
+				fmt.Printf("Deleted %d records for session ID %s\n", len(recordsToDelete), sessionID)
+			}
+		}
+
+		fmt.Println("Session IDs with more than MAX_BUF_SIZE records:", sessionIDs)
+		time.Sleep(time.Second * GC_INTERVAL_SECOND)
+	} // end of for
 
 	select {}
 }
