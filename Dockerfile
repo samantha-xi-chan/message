@@ -1,11 +1,12 @@
 FROM golang:1.18-alpine AS builder
-RUN apk add tzdata dmidecode
+RUN sed -i 's/https:\/\/dl-cdn.alpinelinux.org/http:\/\/nexus.clouditera.com:8081\/repository\/apk/g' /etc/apk/repositories && \
+    apk update && apk add tzdata dmidecode
 RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo Asia/Shanghai > /etc/timezone
 RUN apk add git make
 
 ENV CGO_ENABLED 0
-ENV GOPROXY https://goproxy.cn,direct
+ENV GOPROXY=http://nexus.clouditera.com:8081/repository/goproxy/,direct
 ENV APP_NAME=message
 
 WORKDIR /build
@@ -19,8 +20,9 @@ ENV COMMIT_ID=${MESSAGE_COMMIT_ID}
 RUN make build
 
 
-FROM alpine
-RUN apk add tzdata dmidecode
+FROM alpine:3.18
+RUN sed -i 's/https:\/\/dl-cdn.alpinelinux.org/http:\/\/nexus.clouditera.com:8081\/repository\/apk/g' /etc/apk/repositories && \
+    apk update && apk add tzdata dmidecode
 RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo Asia/Shanghai > /etc/timezone
 RUN apk del tzdata
