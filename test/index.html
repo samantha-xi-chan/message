@@ -5,7 +5,7 @@
 .
 .
 <script>// 18080 -> 9102
-     var ws = new WebSocket("ws://192.168.31.24:9102/api/v1/socket");
+     var ws = new WebSocket("ws://192.168.31.15/api/ws/v1/socket");
      // var ws = new WebSocket("ws://192.168.31.13/api/ws/v1/socket");
 //    var ws = new WebSocket("ws://192.168.31.24:9102/api/v1/socket");
 
@@ -14,7 +14,7 @@ ws.onopen = function(evt) {
     // ws.send("Hello WebSockets!");
     // {"type":2,"version":3,"payload":{"topic":"ID33"}}
     // ws.send("{\"topic\":\"ID33\"}"); // todo: 新增外层协议
-    ws.send("{\"type\":1001,\"version\":1,\"payload\":{\"topic\":\"ID88\"}}") // {\"type\":1001,\"version\":1,\"payload\":{\"topic\":\"ID33\"}}
+    ws.send("{\"type\":1001,\"version\":1,\"payload\":{\"topic\":\"tt1690948593550dvwa\"}}") // {\"type\":1001,\"version\":1,\"payload\":{\"topic\":\"ID33\"}}
 };
 
 ws.onmessage = function(evt) {  

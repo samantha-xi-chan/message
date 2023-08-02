@@ -8,12 +8,16 @@ import (
 	"github.com/Clouditera/message/internal"
 	"github.com/Clouditera/message/internal/domain"
 	. "github.com/Clouditera/message/internal/service"
+	"net/http"
+
 	//"github.com/sirupsen/fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"time"
+
+	_ "net/http/pprof"
 )
 
 type LogEntry struct {
@@ -26,6 +30,10 @@ const TIMEOUT_SECOND = 99999
 const GC_INTERVAL_SECOND = 600
 
 func MainModeSink() {
+	go func() {
+		log.Println(http.ListenAndServe("0.0.0.0:6080", nil))
+	}()
+
 	msgs_high, _ := QueueConnInit(config.EXCHANGE_HIGH)
 	msgs_normal, _ := QueueConnInit(config.EXCHANGE_NORMAL)
 
@@ -81,21 +89,50 @@ func MainModeSink() {
 	}
 	log.Println(res)
 
+	/*
+		go func() {
+			for d := range msgs_normal {
+				log.Printf("recv msgs_normal = %s", d.Body)
+
+				info := domain.FeedSessionStream{}
+				json.Unmarshal(d.Body, &info)
+
+				//fmt.Printf("Unmarshal result: %v\n", info)
+
+				// 落盘
+				ctx, cancel = context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
+				defer cancel()
+				res, _ := collection_log.InsertOne(ctx,
+					bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted": false})
+				fmt.Printf("res.InsertedID: %v\n", res.InsertedID)
+			}
+		}()
+	*/
+
 	go func() {
-		for d := range msgs_normal {
-			log.Printf("recv msgs_normal = %s", d.Body)
+		batchData := []interface{}{}
 
-			info := domain.FeedSessionStream{}
-			json.Unmarshal(d.Body, &info)
-
-			//fmt.Printf("Unmarshal result: %v\n", info)
-
-			// 落盘
-			ctx, cancel = context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
-			defer cancel()
-			res, _ := collection_log.InsertOne(ctx,
-				bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted": false})
-			fmt.Printf("res.InsertedID: %v\n", res.InsertedID)
+		const batchSize = 100
+		const timeout = 5 * time.Second
+		timer := time.NewTimer(timeout)
+		for {
+			select {
+			case d := <-msgs_normal:
+				info := domain.FeedSessionStream{}
+				json.Unmarshal(d.Body, &info)
+				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted": false})
+				if len(batchData) >= batchSize {
+					collection_log.InsertMany(ctx, batchData)
+					batchData = nil
+					timer.Reset(timeout)
+				}
+			case <-timer.C:
+				if len(batchData) > 0 {
+					collection_log.InsertMany(ctx, batchData)
+					batchData = nil
+				}
+				timer.Reset(timeout)
+			}
 		}
 	}()
 
@@ -110,27 +147,54 @@ func MainModeSink() {
 	}
 	log.Println(res)
 	go func() {
-		for d := range msgs_high {
-			log.Printf("recv msgs_high =%s", d.Body)
+		/*
+			for d := range msgs_high {
+				log.Printf("recv msgs_high =%s", d.Body)
 
-			info := domain.UpdateSessionStatus{}
-			json.Unmarshal(d.Body, &info)
+				info := domain.UpdateSessionStatus{}
+				json.Unmarshal(d.Body, &info)
 
-			//fmt.Printf("Unmarshal result: %v\n", info)
+				//fmt.Printf("Unmarshal result: %v\n", info)
 
-			ctx, cancel = context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
-			defer cancel()
-			res, _ := collection_status.InsertOne(ctx,
-				bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted": false})
-			fmt.Printf("res.InsertedID: %v\n", res.InsertedID)
+				ctx, cancel = context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
+				defer cancel()
+				res, _ := collection_status.InsertOne(ctx,
+					bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted": false})
+				fmt.Printf("res.InsertedID: %v\n", res.InsertedID)
+			}
+		*/
+		batchData := []interface{}{}
+
+		const batchSize = 100
+		const timeout = 1 * time.Second
+		timer := time.NewTimer(timeout)
+		for {
+			select {
+			case d := <-msgs_high:
+				info := domain.UpdateSessionStatus{}
+				json.Unmarshal(d.Body, &info)
+				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted": false})
+				if len(batchData) >= batchSize {
+					collection_status.InsertMany(ctx, batchData)
+					batchData = nil
+					timer.Reset(timeout)
+				}
+			case <-timer.C:
+				if len(batchData) > 0 {
+					collection_status.InsertMany(ctx, batchData)
+					batchData = nil
+				}
+				timer.Reset(timeout)
+			}
 		}
+
 	}()
 
 	fmt.Println("starting cron job")
 	//c := cron.New()
 	//e := c.AddFunc("*/3 * * * *", func() {
 	collection_log2 := client.Database(config.DATABASE).Collection(config.COLLECTION_LOG)
-	for true {
+	for false { // disable it
 		fmt.Print("cron func() running ")
 		var MAX_BUF_SIZE = 5000
 
