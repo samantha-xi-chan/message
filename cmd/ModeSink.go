@@ -125,18 +125,24 @@ func MainModeSink() {
 		timer := time.NewTimer(timeout)
 		for {
 			select {
-			case d, _ := <-msgs_normal_buffered:
+			case d, ok := <-msgs_normal_buffered:
+				if !ok {
+					log.Println("msgs_high_buffered closed, exiting loop")
+					return
+				}
 				info := domain.FeedSessionStream{}
 				json.Unmarshal(d, &info)
-				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted": false})
+				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted2": false})
 				if len(batchData) >= batchSize {
 					collection_log.InsertMany(ctx, batchData)
+					log.Println("batchData.size batchSize log: ", len(batchData))
 					batchData = nil
 					timer.Reset(timeout)
 				}
 			case <-timer.C:
 				if len(batchData) > 0 {
 					collection_log.InsertMany(ctx, batchData)
+					log.Println("batchData.size timer log: ", len(batchData))
 					batchData = nil
 				}
 				timer.Reset(timeout)
@@ -186,18 +192,25 @@ func MainModeSink() {
 		timer := time.NewTimer(timeout)
 		for {
 			select {
-			case d, _ := <-msgs_high_buffered:
+			case d, ok := <-msgs_high_buffered:
+				if !ok {
+					log.Println("msgs_high_buffered closed, exiting loop")
+					return
+				}
+
 				info := domain.UpdateSessionStatus{}
 				json.Unmarshal(d, &info)
-				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted": false})
+				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted2": false})
 				if len(batchData) >= batchSize {
 					collection_status.InsertMany(ctx, batchData)
+					log.Println("batchData.size batchSize status: ", len(batchData))
 					batchData = nil
 					timer.Reset(timeout)
 				}
 			case <-timer.C:
 				if len(batchData) > 0 {
 					collection_status.InsertMany(ctx, batchData)
+					log.Println("batchData.size timer status: ", len(batchData))
 					batchData = nil
 				}
 				timer.Reset(timeout)
