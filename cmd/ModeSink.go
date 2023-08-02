@@ -109,6 +109,14 @@ func MainModeSink() {
 		}()
 	*/
 
+	msgs_normal_buffered := make(chan []byte, 10)
+	go func() {
+		for dd := range msgs_normal {
+			msgs_normal_buffered <- dd.Body
+		}
+		close(msgs_normal_buffered)
+	}()
+
 	go func() {
 		batchData := []interface{}{}
 
@@ -117,9 +125,9 @@ func MainModeSink() {
 		timer := time.NewTimer(timeout)
 		for {
 			select {
-			case d := <-msgs_normal:
+			case d, _ := <-msgs_normal_buffered:
 				info := domain.FeedSessionStream{}
-				json.Unmarshal(d.Body, &info)
+				json.Unmarshal(d, &info)
 				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted": false})
 				if len(batchData) >= batchSize {
 					collection_log.InsertMany(ctx, batchData)
@@ -146,6 +154,14 @@ func MainModeSink() {
 		log.Fatal("Indexes().CreateOne err: ", err)
 	}
 	log.Println(res)
+
+	msgs_high_buffered := make(chan []byte, 10)
+	go func() {
+		for dd := range msgs_high {
+			msgs_high_buffered <- dd.Body
+		}
+		close(msgs_high_buffered)
+	}()
 	go func() {
 		/*
 			for d := range msgs_high {
@@ -170,9 +186,9 @@ func MainModeSink() {
 		timer := time.NewTimer(timeout)
 		for {
 			select {
-			case d := <-msgs_high:
+			case d, _ := <-msgs_high_buffered:
 				info := domain.UpdateSessionStatus{}
-				json.Unmarshal(d.Body, &info)
+				json.Unmarshal(d, &info)
 				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted": false})
 				if len(batchData) >= batchSize {
 					collection_status.InsertMany(ctx, batchData)
