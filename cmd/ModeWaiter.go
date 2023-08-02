@@ -4,11 +4,14 @@ import (
 	"context"
 	"log"
 	"net"
+	"net/http"
 
 	pb "github.com/Clouditera/message/api/proto"
 	"github.com/Clouditera/message/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	_ "net/http/pprof"
 )
 
 const (
@@ -31,7 +34,11 @@ func (s *server) FeedSessionStream(ctx context.Context, in *pb.FeedSessionStream
 }
 
 func MainModeWaiter() {
-	service.InitQueue()
+	go func() {
+		log.Println(http.ListenAndServe("0.0.0.0:6070", nil))
+	}()
+
+	service.InitProdQueue()
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {

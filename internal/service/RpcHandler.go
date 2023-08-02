@@ -67,5 +67,12 @@ func enQueue(amqp_channel *amqp.Channel, queue string, body []byte) {
 	}
 }
 
+func InitProdQueue() {
+
+	_, ch_high = ProdQueueConnInit(config.EXCHANGE_HIGH)
+	_, ch_normal = ProdQueueConnInit(config.EXCHANGE_NORMAL)
+
+}
+
 var err error
 var ch *amqp.Channel

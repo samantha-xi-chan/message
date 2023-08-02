@@ -19,3 +19,10 @@ type FeedSessionStream struct { // 任务内部 新的报文
 	EvtType   int32       `json:"event_type"`
 	Payload   interface{} `json:"payload"`
 }
+
+type FeedSessionStreamDAO struct {
+	SessionID string      `json:"session_id"`
+	Timestamp int64       `json:"timestamp"`
+	Payload   interface{} `json:"payload"`
+	Deleted   bool        `json:"deleted"`
+}

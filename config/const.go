@@ -1,7 +1,7 @@
 package config
 
-const EXCHANGE_HIGH = "EXCHANGE_HIGH"
-const EXCHANGE_NORMAL = "EXCHANGE_NORMAL"
+const EXCHANGE_HIGH = "EXCHANGE_HIGH.."
+const EXCHANGE_NORMAL = "EXCHANGE_NORMAL.."
 
 const DATABASE = "logs"
 const COLLECTION_LOG = "log"
