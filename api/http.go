@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/Clouditera/message/api/domain"
+	"message/api/domain"
 )
 
 type Body struct {

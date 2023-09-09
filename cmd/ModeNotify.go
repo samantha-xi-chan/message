@@ -3,13 +3,15 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	api "github.com/Clouditera/message/api/domain"
-	"github.com/Clouditera/message/config"
-	"github.com/Clouditera/message/internal/domain"
-	. "github.com/Clouditera/message/internal/service"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/gorilla/websocket"
 	"log"
+	api "message/api/domain"
+	"message/internal/domain"
+
+	config2 "message/config"
+	"message/internal/config"
+	. "message/internal/service"
 	"net/http"
 )
 
@@ -62,7 +64,7 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 		req := api.WsReq{}
 		json.Unmarshal(message, &req)
 
-		if req.Type == config.TYPE_SUBSCRIBE && req.Version == config.WS_PROTO_VER {
+		if req.Type == config2.TYPE_SUBSCRIBE && req.Version == config2.WS_PROTO_VER {
 			//sub := api.Subscribe{}
 
 			// unmarshal it (usually after receiving bytes from somewhere)
@@ -96,8 +98,11 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 }
 
 func MainModeNotify() {
-	msgs_high, _ := QueueConnInit(config.EXCHANGE_HIGH)
-	msgs_normal, _ := QueueConnInit(config.EXCHANGE_NORMAL)
+
+	v, _ := config.GetDependQueue()
+
+	msgs_high, _ := QueueConnInit(v, config2.EXCHANGE_HIGH)
+	msgs_normal, _ := QueueConnInit(v, config2.EXCHANGE_NORMAL)
 
 	map_topic_chanset = make(map[string](mapset.Set))
 	//map_topic_chanset[TOPIC] = mapset.NewSet() // todo: 移除 改为 后期新增订阅时 如果没有这条KV映射则新增set并增加map映射， 如果有则增加set内容
@@ -119,7 +124,9 @@ func MainModeNotify() {
 	}()
 
 	http.HandleFunc("/api/v1/socket", socketHandlerB)
-	log.Fatal(http.ListenAndServe(":9102", nil))
+
+	val, _ := config.GetNotifyPortHttp()
+	log.Fatal(http.ListenAndServe(val, nil))
 }
 
 func broadcast(bytes []byte) {

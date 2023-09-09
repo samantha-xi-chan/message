@@ -3,7 +3,6 @@ package service
 import (
 	"log"
 
-	"github.com/Clouditera/message/internal"
 	"github.com/streadway/amqp"
 )
 
@@ -13,8 +12,8 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func QueueConnInit(exhange string) (channel <-chan amqp.Delivery, amqp_channel *amqp.Channel) {
-	conn, err := amqp.Dial(internal.AMQP_URL)
+func QueueConnInit(amqpUrl string, exhange string) (channel <-chan amqp.Delivery, amqp_channel *amqp.Channel) {
+	conn, err := amqp.Dial(amqpUrl)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	//defer conn.Close()
 
@@ -66,8 +65,8 @@ func QueueConnInit(exhange string) (channel <-chan amqp.Delivery, amqp_channel *
 	return msg_channel, ch
 }
 
-func ProdQueueConnInit(exhange string) (channel <-chan amqp.Delivery, amqp_channel *amqp.Channel) {
-	conn, err := amqp.Dial(internal.AMQP_URL)
+func ProdQueueConnInit(amqpUrl string, exhange string) (channel <-chan amqp.Delivery, amqp_channel *amqp.Channel) {
+	conn, err := amqp.Dial(amqpUrl)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	//defer conn.Close()
 

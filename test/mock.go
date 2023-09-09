@@ -4,25 +4,22 @@ package main
 import (
 	"context"
 	"encoding/json"
-	apidomain "github.com/Clouditera/message/api/domain"
-	pb "github.com/Clouditera/message/api/proto"
-	"github.com/Clouditera/message/internal/domain"
 	"google.golang.org/grpc"
 	"log"
+	apidomain "message/api/domain"
+	pb "message/api/proto"
+	"message/internal/domain"
 	"time"
 )
 
 const (
-	address = "192.168.31.43:10051"
-	//address     = "localhost:10051"
-	defaultName = "IamClient"
+	address = "localhost:10051"
 
-	SessionID6 = "ID88"
-	//SessionID6 = "ID10006666"
+	SessionID6 = "test"
 )
 
 func main() {
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 100; i++ {
 		send()
 		time.Sleep(time.Millisecond * 10)
 	}

@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Clouditera/message/config"
-	"github.com/Clouditera/message/internal"
-	"github.com/Clouditera/message/internal/domain"
-	. "github.com/Clouditera/message/internal/service"
+
+	config2 "message/config"
+	"message/internal/config"
+	"message/internal/domain"
+	. "message/internal/service"
 	"net/http"
 
-	//"github.com/sirupsen/fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -31,15 +31,19 @@ const GC_INTERVAL_SECOND = 600
 
 func MainModeSink() {
 	go func() {
-		log.Println(http.ListenAndServe("0.0.0.0:6080", nil))
+		v, _ := config.GetSinkPortPprof()
+		log.Println(http.ListenAndServe(v, nil))
 	}()
 
-	msgs_high, _ := QueueConnInit(config.EXCHANGE_HIGH)
-	msgs_normal, _ := QueueConnInit(config.EXCHANGE_NORMAL)
+	v, _ := config.GetDependQueue()
+	msgs_high, _ := QueueConnInit(v, config2.EXCHANGE_HIGH)
+	msgs_normal, _ := QueueConnInit(v, config2.EXCHANGE_NORMAL)
 
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(internal.MONGO_URL).SetMaxPoolSize(100))
+
+	val, _ := config.GetDependMongo()
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(val).SetMaxPoolSize(100))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,7 +63,7 @@ func MainModeSink() {
 	fmt.Println("Ping OK")
 
 	// biz code below . . .
-	collection_log := client.Database(config.DATABASE).Collection(config.COLLECTION_LOG)
+	collection_log := client.Database(config2.DATABASE).Collection(config2.COLLECTION_LOG)
 	res, err := collection_log.Indexes().CreateOne(context.Background(), mongo.IndexModel{
 		Keys: bson.D{
 			{Key: "session_id", Value: 1},
@@ -150,7 +154,7 @@ func MainModeSink() {
 		}
 	}()
 
-	collection_status := client.Database(config.DATABASE).Collection(config.COLLECTION_STATUS)
+	collection_status := client.Database(config2.DATABASE).Collection(config2.COLLECTION_STATUS)
 	res, err = collection_status.Indexes().CreateOne(context.Background(), mongo.IndexModel{
 		Keys: bson.D{
 			{Key: "session_id", Value: 1},
@@ -222,7 +226,7 @@ func MainModeSink() {
 	fmt.Println("starting cron job")
 	//c := cron.New()
 	//e := c.AddFunc("*/3 * * * *", func() {
-	collection_log2 := client.Database(config.DATABASE).Collection(config.COLLECTION_LOG)
+	collection_log2 := client.Database(config2.DATABASE).Collection(config2.COLLECTION_LOG)
 	for false { // disable it
 		fmt.Print("cron func() running ")
 		var MAX_BUF_SIZE = 5000

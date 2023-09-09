@@ -1,0 +1,11 @@
+
+
+#
+go build -o waiter cmd/ModeWaiter.go
+go build -o release/tmp/waiter cmd/ModeWaiter.go
+
+
+# xxx
+
+go run . -mode waiter
+

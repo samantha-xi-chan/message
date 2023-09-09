@@ -1,0 +1,22 @@
+waiter:
+    port_rpc: ":10051"
+    port_pprof: ":7060"
+
+sink:
+    port_pprof: ":7061"
+
+gateway:
+    port_pprof: ":7062"
+    port_http: ":18081"
+
+notify:
+    port_http: ":9102"
+    port_pprof: ":7063"
+
+depend:
+    queue: "amqp://guest:guest@192.168.31.117:5672/"
+    mongo_dsn: "mongodb://192.168.31.117:27017"
+
+debug:
+    biz_log_level: 6      # 0. PanicLevel; 1. FatalLevel; 2. ErrorLevel; 3. WarnLevel; 4. InfoLevel; 5. DebugLevel; 6. TraceLevel
+    sql_log_level: 3      # 1. Silent ; 2. Error ; 3. Warn ; 4. Info ;

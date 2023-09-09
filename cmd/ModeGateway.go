@@ -3,16 +3,18 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/Clouditera/message/api"
-	"github.com/Clouditera/message/internal/repo"
 	"github.com/gin-gonic/gin"
 	"log"
+	"message/api"
+	"message/internal/config"
+	"message/internal/repo"
 	"strconv"
 	"strings"
 )
 
 func MainModeGateway() {
-	repo.InitMongo()
+	v, _ := config.GetDependMongo()
+	repo.InitMongo(v)
 
 	fetchSession := func(c *gin.Context) {
 		//  todo： 增加分页查询的保护，避免单次请求数据量过大
@@ -83,5 +85,7 @@ func MainModeGateway() {
 	{
 		v2.GET("/:session_id", fetchSessionV2)
 	}
-	router.Run(":18081")
+
+	val, _ := config.GetGwPortHttp()
+	router.Run(val)
 }

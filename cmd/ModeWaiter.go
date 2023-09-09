@@ -3,19 +3,16 @@ package cmd
 import (
 	"context"
 	"log"
+	"message/internal/config"
 	"net"
 	"net/http"
 
-	pb "github.com/Clouditera/message/api/proto"
-	"github.com/Clouditera/message/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	pb "message/api/proto"
+	"message/internal/service"
 
 	_ "net/http/pprof"
-)
-
-const (
-	port = ":10051"
 )
 
 type server struct{}
@@ -35,12 +32,15 @@ func (s *server) FeedSessionStream(ctx context.Context, in *pb.FeedSessionStream
 
 func MainModeWaiter() {
 	go func() {
-		log.Println(http.ListenAndServe("0.0.0.0:6070", nil))
+		v, _ := config.GetWaiterPortPprof()
+		log.Println(http.ListenAndServe(v, nil))
 	}()
 
-	service.InitProdQueue()
+	v, _ := config.GetDependQueue()
+	service.InitProdQueue(v)
 
-	lis, err := net.Listen("tcp", port)
+	v, _ = config.GetWaiterPortRpc()
+	lis, err := net.Listen("tcp", v)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 		return

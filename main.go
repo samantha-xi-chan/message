@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/Clouditera/message/cmd"
+	"message/cmd"
 )
 
 var _mode = flag.String("mode", "empty", "work mode")

@@ -3,14 +3,13 @@ package repo
 import (
 	"context"
 	"fmt"
-	"github.com/Clouditera/message/api/domain"
-	"github.com/Clouditera/message/config"
-	"github.com/Clouditera/message/internal"
-	idomain "github.com/Clouditera/message/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"message/api/domain"
+	"message/config"
+	idomain "message/internal/domain"
 	"strconv"
 	"time"
 )
@@ -28,12 +27,13 @@ var collection_status *mongo.Collection
 var s_ctx context.Context
 
 // DB static connection
-func InitMongo() {
+func InitMongo(mongoDsn string) {
 	var cancel context.CancelFunc
 	s_ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
 	fmt.Println(cancel)
 	//defer cancel()
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(internal.MONGO_URL))
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoDsn))
 	if err != nil {
 		log.Fatal(err)
 	}

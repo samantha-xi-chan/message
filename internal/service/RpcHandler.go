@@ -2,19 +2,19 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/Clouditera/message/config"
-	"github.com/Clouditera/message/internal/domain"
 	"github.com/streadway/amqp"
 	"log"
+	"message/config"
+	"message/internal/domain"
 )
 
 var ch_high *amqp.Channel
 var ch_normal *amqp.Channel
 
-func InitQueue() {
+func InitQueue(amqpUrl string) {
 
-	_, ch_high = QueueConnInit(config.EXCHANGE_HIGH)
-	_, ch_normal = QueueConnInit(config.EXCHANGE_NORMAL)
+	_, ch_high = QueueConnInit(amqpUrl, config.EXCHANGE_HIGH)
+	_, ch_normal = QueueConnInit(amqpUrl, config.EXCHANGE_NORMAL)
 
 }
 
@@ -67,10 +67,10 @@ func enQueue(amqp_channel *amqp.Channel, queue string, body []byte) {
 	}
 }
 
-func InitProdQueue() {
+func InitProdQueue(amqpUrl string) {
 
-	_, ch_high = ProdQueueConnInit(config.EXCHANGE_HIGH)
-	_, ch_normal = ProdQueueConnInit(config.EXCHANGE_NORMAL)
+	_, ch_high = ProdQueueConnInit(amqpUrl, config.EXCHANGE_HIGH)
+	_, ch_normal = ProdQueueConnInit(amqpUrl, config.EXCHANGE_NORMAL)
 
 }
 
