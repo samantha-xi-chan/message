@@ -14,8 +14,8 @@ notify:
     port_pprof: ":7063"
 
 depend:
-    queue: "amqp://guest:guest@192.168.31.117:5672/"
-    mongo_dsn: "mongodb://192.168.31.117:27017"
+    queue: "amqp://guest:guest@localhost:5672/"
+    mongo_dsn: "mongodb://localhost:27017"
 
 debug:
     biz_log_level: 6      # 0. PanicLevel; 1. FatalLevel; 2. ErrorLevel; 3. WarnLevel; 4. InfoLevel; 5. DebugLevel; 6. TraceLevel
