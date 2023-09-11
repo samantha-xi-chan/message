@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/streadway/amqp"
 	"log"
-	"message/config"
+	"message/internal/config"
 	"message/internal/domain"
 )
 

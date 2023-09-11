@@ -9,7 +9,6 @@ import (
 	api "message/api/domain"
 	"message/internal/domain"
 
-	config2 "message/config"
 	"message/internal/config"
 	. "message/internal/service"
 	"net/http"
@@ -64,7 +63,7 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 		req := api.WsReq{}
 		json.Unmarshal(message, &req)
 
-		if req.Type == config2.TYPE_SUBSCRIBE && req.Version == config2.WS_PROTO_VER {
+		if req.Type == config.TYPE_SUBSCRIBE && req.Version == config.WS_PROTO_VER {
 			//sub := api.Subscribe{}
 
 			// unmarshal it (usually after receiving bytes from somewhere)
@@ -101,8 +100,8 @@ func MainModeNotify() {
 
 	v, _ := config.GetDependQueue()
 
-	msgs_high, _ := QueueConnInit(v, config2.EXCHANGE_HIGH)
-	msgs_normal, _ := QueueConnInit(v, config2.EXCHANGE_NORMAL)
+	msgs_high, _ := QueueConnInit(v, config.EXCHANGE_HIGH)
+	msgs_normal, _ := QueueConnInit(v, config.EXCHANGE_NORMAL)
 
 	map_topic_chanset = make(map[string](mapset.Set))
 	//map_topic_chanset[TOPIC] = mapset.NewSet() // todo: 移除 改为 后期新增订阅时 如果没有这条KV映射则新增set并增加map映射， 如果有则增加set内容

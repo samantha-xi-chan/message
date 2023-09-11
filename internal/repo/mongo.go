@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"message/api/domain"
-	"message/config"
+	"message/internal/config"
 	idomain "message/internal/domain"
 	"strconv"
 	"time"

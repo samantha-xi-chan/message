@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	config2 "message/config"
 	"message/internal/config"
 	"message/internal/domain"
 	. "message/internal/service"
@@ -36,8 +35,8 @@ func MainModeSink() {
 	}()
 
 	v, _ := config.GetDependQueue()
-	msgs_high, _ := QueueConnInit(v, config2.EXCHANGE_HIGH)
-	msgs_normal, _ := QueueConnInit(v, config2.EXCHANGE_NORMAL)
+	msgs_high, _ := QueueConnInit(v, config.EXCHANGE_HIGH)
+	msgs_normal, _ := QueueConnInit(v, config.EXCHANGE_NORMAL)
 
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
 	defer cancel()
@@ -63,7 +62,7 @@ func MainModeSink() {
 	fmt.Println("Ping OK")
 
 	// biz code below . . .
-	collection_log := client.Database(config2.DATABASE).Collection(config2.COLLECTION_LOG)
+	collection_log := client.Database(config.DATABASE).Collection(config.COLLECTION_LOG)
 	res, err := collection_log.Indexes().CreateOne(context.Background(), mongo.IndexModel{
 		Keys: bson.D{
 			{Key: "session_id", Value: 1},
@@ -154,7 +153,7 @@ func MainModeSink() {
 		}
 	}()
 
-	collection_status := client.Database(config2.DATABASE).Collection(config2.COLLECTION_STATUS)
+	collection_status := client.Database(config.DATABASE).Collection(config.COLLECTION_STATUS)
 	res, err = collection_status.Indexes().CreateOne(context.Background(), mongo.IndexModel{
 		Keys: bson.D{
 			{Key: "session_id", Value: 1},
@@ -226,7 +225,7 @@ func MainModeSink() {
 	fmt.Println("starting cron job")
 	//c := cron.New()
 	//e := c.AddFunc("*/3 * * * *", func() {
-	collection_log2 := client.Database(config2.DATABASE).Collection(config2.COLLECTION_LOG)
+	collection_log2 := client.Database(config.DATABASE).Collection(config.COLLECTION_LOG)
 	for false { // disable it
 		fmt.Print("cron func() running ")
 		var MAX_BUF_SIZE = 5000
