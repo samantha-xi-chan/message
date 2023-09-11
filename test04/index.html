@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+    // WebSocket configuration
+    const host = "192.168.31.8";
+    const port = 9102;
+    const topic = "test";
+    const wsUrl = `ws://${host}:${port}/api/v1/socket`;
+
+    // Create a WebSocket connection
+    const ws = new WebSocket(wsUrl);
+
+    // WebSocket event handlers
+    ws.onopen = function(evt) {
+        console.log(new Date().getTime(), 'Connection open ...');
+
+        // Prepare the message to send
+        const message = {
+            type: 1001,
+            version: 1,
+            payload: {
+                topic: topic
+            }
+        };
+
+        // Send the message as a JSON string
+        ws.send(JSON.stringify(message));
+    };
+
+    ws.onmessage = function(evt) {
+        console.log(new Date().getTime(), "Received Message: " + evt.data);
+    };
+
+    ws.onerror = function(evt) {
+        console.error(new Date().getTime(), "WebSocket Error: " + evt.message);
+    };
+
+    ws.onclose = function(evt) {
+        console.log(new Date().getTime(), "Connection closed.");
+    };
+
+    // Close the WebSocket connection when the page is unloaded
+    window.addEventListener("beforeunload", function() {
+        ws.close();
+    });
+</script>
+</body>
+</html>
