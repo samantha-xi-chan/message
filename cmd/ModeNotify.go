@@ -133,9 +133,9 @@ func broadcast(bytes []byte) {
 	var feedSessionStream domain.FeedSessionStream
 	err := json.Unmarshal(bytes, &feedSessionStream)
 	if err != nil {
-		fmt.Println("Error", err)
+		log.Println("Error", err)
 	} else {
-		fmt.Println("feedSessionStream: ", feedSessionStream)
+		log.Println("feedSessionStream: ", feedSessionStream)
 	}
 	session_id := feedSessionStream.SessionID
 	if map_topic_chanset[session_id] != nil {
