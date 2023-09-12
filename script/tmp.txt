@@ -13,6 +13,12 @@ ssh 8_root "pkill -f 'msg -mode sink' "; ssh 8_root "cd /root/msg/; ./msg -mode 
 ssh 8_root "pkill -f 'msg -mode gateway' "; ssh 8_root "cd /root/msg/; ./msg -mode gateway"
 ssh 8_root "pkill -f 'msg -mode notify' "; ssh 8_root "cd /root/msg/; ./msg -mode notify"
 
+# 后台
+cd /root/msg/;
+nohup ./msg -mode waiter 2>&1 >> waiter.log &
+nohup ./msg -mode sink 2>&1 >> sink.log &
+nohup ./msg -mode gateway 2>&1 >> gateway.log &
+nohup ./msg -mode notify 2>&1 >> notify.log &
 
 
 # 拷贝配置文件、应用程序到目标主机 7_root
