@@ -124,7 +124,7 @@ func MainModeSink() {
 		batchData := []interface{}{}
 
 		const batchSize = 100
-		const timeout = 5 * time.Second
+		const timeout = 1 * time.Second
 		timer := time.NewTimer(timeout)
 		for {
 			select {
