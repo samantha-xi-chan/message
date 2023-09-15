@@ -40,7 +40,7 @@ func MainModeSink() {
 			log.Fatal("config e: ", e)
 		}
 
-		log.Println("GetDebugPprofNm addr: ", addr)
+		log.Println("GetDebugPprofSink addr: ", addr)
 		go util_debug.InitPProf(addr)
 	}
 

@@ -41,7 +41,7 @@ func MainModeWaiter() {
 			log.Fatal("config e: ", e)
 		}
 
-		log.Println("GetDebugPprofNm addr: ", addr)
+		log.Println("GetDebugPprofWaiter addr: ", addr)
 		go util_debug.InitPProf(addr)
 	}
 

@@ -16,10 +16,22 @@ const (
 )
 
 func main() {
-	for i := 0; i < 100000000000000; i++ {
-		send()
-		//time.Sleep(time.Millisecond * 10)
+	for i := 0; i < 200; i++ {
+		go func() {
+			for x := 0; x < 100000000000000; x++ {
+				send()
+				//time.Sleep(time.Millisecond * 10)
+			}
+		}()
+
+		if i%10 == 0 {
+			log.Println(" - --- -- - - --- - - --  - --- -- - - --- - - -- - - - -- - -- - - i", i)
+			time.Sleep(time.Millisecond * 1000)
+		}
+
 	}
+
+	select {}
 }
 
 func send() {

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Console Output</title>
+    <style>
+        /* CSS styles for the floating messageCount div */
+        #history-count {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div id="console-output"></div>
+<div id="history-count">Message Count: 1</div> <!-- Add a new div for messageCount -->
+<script>
+    let messageCount = 1; // Initialize the message count
+    let historyCount = 1;
+
+    const maxMessageCount = 50; // Set a maximum message count
+
+    // Function to log messages to the console and display them on the page
+    function logToConsoleAndPage(message) {
+        const consoleOutputDiv = document.getElementById("console-output");
+        // console.log(message);
+
+        // Create a new div for each message
+        const messageDiv = document.createElement("div");
+        messageDiv.innerText =  message;
+
+        messageCount++; // Increment the message count
+        historyCount++;
+
+        // Create a document fragment to batch append messages
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(messageDiv);
+
+        // Append the fragment to the console output
+        consoleOutputDiv.appendChild(fragment);
+
+        // Check if the message count exceeds the maximum
+        if (messageCount > maxMessageCount) {
+            // Remove old messages
+            const messageDivs = consoleOutputDiv.querySelectorAll("div");
+            const removeCount = messageCount - maxMessageCount;
+            for (let i = 0; i < removeCount; i++) {
+                consoleOutputDiv.removeChild(messageDivs[i]);
+            }
+            messageCount = maxMessageCount; // Reset the message count
+        }
+
+        const historyCountDiv = document.getElementById("history-count");
+        historyCountDiv.textContent = `historyCount: ${historyCount}`;
+    }
+
+    // WebSocket configuration
+    const host = "192.168.31.117";
+    const port = 9102;
+    const topic = "notopic";
+    const wsUrl = `ws://${host}:${port}/api/v1/socket`;
+
+    // Create a WebSocket connection
+    ws = new WebSocket(wsUrl);
+
+    // WebSocket event handlers
+    ws.onopen = function(evt) {
+        logToConsoleAndPage(new Date().getTime() + ' Connection open ...');
+
+        // Prepare the message to send
+        const message = {
+            type: 1001,
+            version: 1,
+            payload: {
+                topic: topic
+            }
+        };
+
+        // Send the message as a JSON string
+        ws.send(JSON.stringify(message));
+    };
+
+    ws.onmessage = function(evt) {
+        logToConsoleAndPage(new Date().getTime() + " NewMsg : " + evt.data);
+    };
+
+    ws.onerror = function(evt) {
+        logToConsoleAndPage(new Date().getTime() + " WebSocket Error: " + evt.message);
+    };
+
+    ws.onclose = function(evt) {
+        logToConsoleAndPage(new Date().getTime() + " Connection closed.");
+        // 重新连接
+        setTimeout(() => {
+            ws = new WebSocket(wsUrl);
+            logToConsoleAndPage(new Date().getTime() + " ws.connect finished .");
+        }, 5000); // 设置重连间隔，这里设置为 5 秒
+    };
+
+    // Close the WebSocket connection when the page is unloaded
+    window.addEventListener("beforeunload", function() {
+        ws.close();
+    });
+</script>
+</body>
+</html>
