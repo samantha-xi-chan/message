@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket自动重试和断开自动重连</title>
+    <style>
+        #status-bar {
+            height: 30px;
+            width: 100%;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px;
+        }
+
+        .online {
+            background-color: green;
+            color: white;
+        }
+
+        .offline {
+            background-color: red;
+            color: white;
+        }
+    </style>
+
+</head>
+<body>
+<div id="output"></div>
+<div id="status-bar" class="offline">离线</div>
+
+
+<script>
+    const wsUrl = "ws://localhost:8080/websocket";
+
+    let ws;
+    let statusBar = document.getElementById("status-bar");
+    function updateStatusBar(status) {
+        statusBar.textContent = status;
+        statusBar.className = status === "在线" ? "online" : "offline";
+    }
+
+    function connectWebSocket() {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+            document.getElementById("output").innerHTML = "WebSocket连接已建立";
+            updateStatusBar("在线");
+
+            setTimeout(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send("Hello, WebSocket!");
+                }
+            }, 5000);
+        };
+
+        ws.onmessage = (event) => {
+            document.getElementById("output").innerHTML = "收到消息：" + event.data;
+        };
+
+        ws.onclose = (event) => {
+            if (event.code === 1000) {
+                document.getElementById("output").innerHTML = "WebSocket连接已正常关闭";
+                updateStatusBar("正常关闭");
+            } else {
+                document.getElementById("output").innerHTML = "WebSocket连接已断开，正在尝试重新连接...";
+                updateStatusBar("离线，尝试重新连接...");
+
+                // 自动重连，等待一段时间后重试
+                setTimeout(connectWebSocket, 3000);
+            }
+        };
+    }
+
+    connectWebSocket(); // 初始连接
+
+
+    // 当需要发送消息时，使用 ws.send() 方法
+    // ws.send("Hello, WebSocket!");
+
+    // 当需要手动关闭WebSocket连接时，使用 ws.close() 方法
+    // ws.close();
+</script>
+</body>
+</html>
