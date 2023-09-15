@@ -2,15 +2,14 @@ package cmd
 
 import (
 	"context"
-	"log"
-	"message/internal/config"
-	"net"
-	"net/http"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"log"
 	pb "message/api/proto"
+	"message/internal/config"
 	"message/internal/service"
+	"message/package/util_debug"
+	"net"
 
 	_ "net/http/pprof"
 )
@@ -31,10 +30,20 @@ func (s *server) FeedSessionStream(ctx context.Context, in *pb.FeedSessionStream
 }
 
 func MainModeWaiter() {
-	go func() {
-		v, _ := config.GetWaiterPortPprof()
-		log.Println(http.ListenAndServe(v, nil))
-	}()
+	debugOn, e := config.GetDebugMode()
+	if e != nil {
+		log.Fatal("GetDebugMode: ", e)
+	}
+
+	if debugOn {
+		addr, e := config.GetDebugPprofWaiter()
+		if e != nil {
+			log.Fatal("config e: ", e)
+		}
+
+		log.Println("GetDebugPprofNm addr: ", addr)
+		go util_debug.InitPProf(addr)
+	}
 
 	v, _ := config.GetDependQueue()
 	service.InitProdQueue(v)

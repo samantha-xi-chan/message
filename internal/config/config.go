@@ -19,11 +19,6 @@ func init() {
 	log.Println("config init()")
 }
 
-func GetWaiterPortPprof() (string, error) {
-	port := viper.GetString("waiter.port_pprof")
-
-	return port, nil
-}
 func GetWaiterPortRpc() (string, error) {
 	port := viper.GetString("waiter.port_rpc")
 	return port, nil
@@ -40,11 +35,6 @@ func GetDependMongo() (string, error) {
 
 	return v, nil
 }
-func GetSinkPortPprof() (string, error) {
-	port := viper.GetString("sink.port_pprof")
-
-	return port, nil
-}
 
 func GetGwPortHttp() (string, error) {
 	port := viper.GetString("gateway.port_http")
@@ -54,4 +44,35 @@ func GetGwPortHttp() (string, error) {
 func GetNotifyPortHttp() (string, error) {
 	port := viper.GetString("notify.port_http")
 	return port, nil
+}
+
+func GetDebugMode() (bool, error) {
+	v := viper.GetBool("debug.debug_mode")
+	return v, nil
+}
+func GetDebugPprofWaiter() (string, error) {
+	v := viper.GetString("debug.pprof_waiter")
+	return v, nil
+}
+func GetDebugPprofSink() (string, error) {
+	v := viper.GetString("debug.pprof_sink")
+	return v, nil
+}
+func GetDebugPprofGateway() (string, error) {
+	v := viper.GetString("debug.pprof_gateway")
+	return v, nil
+}
+func GetDebugPprofNotify() (string, error) {
+	v := viper.GetString("debug.pprof_notify")
+	return v, nil
+}
+
+func GetDebugSlowThreshold() (int, error) {
+	v := viper.GetInt("debug.slow_threshold")
+	return v, nil
+}
+
+func GetDebugLogRt() (bool, error) {
+	v := viper.GetBool("debug.log_rt")
+	return v, nil
 }

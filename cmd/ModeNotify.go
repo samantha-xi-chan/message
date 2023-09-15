@@ -8,9 +8,10 @@ import (
 	"log"
 	api "message/api/domain"
 	"message/internal/domain"
+	"message/internal/service"
+	"message/package/util_debug"
 
 	"message/internal/config"
-	. "message/internal/service"
 	"net/http"
 )
 
@@ -97,11 +98,25 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 }
 
 func MainModeNotify() {
+	debugOn, e := config.GetDebugMode()
+	if e != nil {
+		log.Fatal("GetDebugMode: ", e)
+	}
+
+	if debugOn {
+		addr, e := config.GetDebugPprofNotify()
+		if e != nil {
+			log.Fatal("config e: ", e)
+		}
+
+		log.Println("GetDebugPprofNotify addr: ", addr)
+		go util_debug.InitPProf(addr)
+	}
 
 	v, _ := config.GetDependQueue()
 
-	msgs_high, _ := QueueConnInit(v, config.EXCHANGE_HIGH)
-	msgs_normal, _ := QueueConnInit(v, config.EXCHANGE_NORMAL)
+	msgs_high, _ := service.QueueConnInit(v, config.EXCHANGE_HIGH)
+	msgs_normal, _ := service.QueueConnInit(v, config.EXCHANGE_NORMAL)
 
 	map_topic_chanset = make(map[string](mapset.Set))
 	//map_topic_chanset[TOPIC] = mapset.NewSet() // todo: 移除 改为 后期新增订阅时 如果没有这条KV映射则新增set并增加map映射， 如果有则增加set内容

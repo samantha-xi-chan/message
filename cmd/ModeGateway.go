@@ -8,11 +8,27 @@ import (
 	"message/api"
 	"message/internal/config"
 	"message/internal/repo"
+	"message/package/util_debug"
 	"strconv"
 	"strings"
 )
 
 func MainModeGateway() {
+	debugOn, e := config.GetDebugMode()
+	if e != nil {
+		log.Fatal("GetDebugMode: ", e)
+	}
+
+	if debugOn {
+		addr, e := config.GetDebugPprofGateway()
+		if e != nil {
+			log.Fatal("config e: ", e)
+		}
+
+		log.Println("GetDebugPprofGateway addr: ", addr)
+		go util_debug.InitPProf(addr)
+	}
+
 	v, _ := config.GetDependMongo()
 	repo.InitMongo(v)
 

@@ -4,16 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
-	"message/internal/config"
-	"message/internal/domain"
-	. "message/internal/service"
-	"net/http"
+	"message/internal/service"
+	"message/package/util_debug"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"message/internal/config"
+	"message/internal/domain"
+	//. "message/internal/service"
 	"time"
 
 	_ "net/http/pprof"
@@ -29,14 +29,24 @@ const TIMEOUT_SECOND = 99999
 const GC_INTERVAL_SECOND = 600
 
 func MainModeSink() {
-	go func() {
-		v, _ := config.GetSinkPortPprof()
-		log.Println(http.ListenAndServe(v, nil))
-	}()
+	debugOn, e := config.GetDebugMode()
+	if e != nil {
+		log.Fatal("GetDebugMode: ", e)
+	}
+
+	if debugOn {
+		addr, e := config.GetDebugPprofSink()
+		if e != nil {
+			log.Fatal("config e: ", e)
+		}
+
+		log.Println("GetDebugPprofNm addr: ", addr)
+		go util_debug.InitPProf(addr)
+	}
 
 	v, _ := config.GetDependQueue()
-	msgs_high, _ := QueueConnInit(v, config.EXCHANGE_HIGH)
-	msgs_normal, _ := QueueConnInit(v, config.EXCHANGE_NORMAL)
+	msgs_high, _ := service.QueueConnInit(v, config.EXCHANGE_HIGH)
+	msgs_normal, _ := service.QueueConnInit(v, config.EXCHANGE_NORMAL)
 
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
 	defer cancel()
