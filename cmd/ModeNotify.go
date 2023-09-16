@@ -53,16 +53,23 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 	}()
 
 	for {
-		_, message, err := conn.ReadMessage()
+		messageType, pl, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("Error during message reading:", err)
 			break
 		}
-		log.Printf("Received: %s", message)
+		log.Printf("Received: %s", pl)
+
+		if string(pl) == "ping" {
+			if err := conn.WriteMessage(messageType, pl); err != nil {
+				log.Println(err)
+				continue
+			}
+		}
 
 		// 解析是否是订阅,如果是订阅则新增映射
 		req := api.WsReq{}
-		json.Unmarshal(message, &req)
+		json.Unmarshal(pl, &req)
 
 		if req.Type == config.TYPE_SUBSCRIBE && req.Version == config.WS_PROTO_VER {
 			//sub := api.Subscribe{}
@@ -70,7 +77,7 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 			// unmarshal it (usually after receiving bytes from somewhere)
 			sub := &api.Subscribe{}
 			wsReq := api.WsReq{Payload: sub}
-			json.Unmarshal(message, &wsReq)
+			json.Unmarshal(pl, &wsReq)
 
 			//bytes := []byte(fmt.Sprintf("%v", req.Payload.(interface{})))
 			//log.Printf("bytes: %s", string(bytes))
