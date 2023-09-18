@@ -37,23 +37,34 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 	defer conn.Close()
 
 	//r_chan := make(chan []byte, 2)
-	w_chan := make(chan []byte, 99999)
+	wMsgChan := make(chan []byte, 99999)
+	wCtrlChan := make(chan []byte, 9999)
 
 	go func() {
 		for {
-			msg, ok := <-w_chan
-			if ok {
-				err = conn.WriteMessage(websocket.TextMessage, msg)
-				if err != nil {
-					log.Println("Error during message writing:", err)
-					break
+			select {
+			case msg, ok := <-wCtrlChan:
+				if ok {
+					err = conn.WriteMessage(websocket.TextMessage, msg)
+					if err != nil {
+						log.Println("Error during message writing: wCtrlChan", err)
+						break
+					}
 				}
-			}
-		}
+			case msg, ok := <-wMsgChan:
+				if ok {
+					err = conn.WriteMessage(websocket.TextMessage, msg)
+					if err != nil {
+						log.Println("Error during message writing wMsgChan:", err)
+						break
+					}
+				}
+			} // end select
+		} // end for
 	}()
 
 	for {
-		messageType, pl, err := conn.ReadMessage()
+		_, pl, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("Error during message reading:", err)
 			break
@@ -61,15 +72,21 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 		log.Printf("Received: %s", pl)
 
 		if string(pl) == "ping" {
-			if err := conn.WriteMessage(messageType, pl); err != nil {
-				log.Println(err)
-				continue
-			}
+			wCtrlChan <- pl
+			//if err := conn.WriteMessage(messageType, pl); err != nil {
+			//	log.Println(err)
+			//}
+
+			continue
 		}
 
 		// 解析是否是订阅,如果是订阅则新增映射
 		req := api.WsReq{}
-		json.Unmarshal(pl, &req)
+		e := json.Unmarshal(pl, &req)
+		if e != nil {
+			log.Println("Unmarshal err: ", e)
+			continue
+		}
 
 		if req.Type == config.TYPE_SUBSCRIBE && req.Version == config.WS_PROTO_VER {
 			//sub := api.Subscribe{}
@@ -89,15 +106,18 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 				log.Printf("new map KV: %s", topic)
 				map_topic_chanset[topic] = mapset.NewSet()
 			}
-			map_topic_chanset[topic].Add(w_chan)
+			map_topic_chanset[topic].Add(wMsgChan)
 
 			// 暂时不需要其他处理 其实可以直接丢弃
 			//r_chan <- message
+		} else {
+			log.Println("req.Type and ver not supported: ")
+			continue
 		}
 	}
 
 	// 移除当前 topic 对本次发送缓冲区的映射
-	map_topic_chanset[topic].Remove(w_chan)
+	map_topic_chanset[topic].Remove(wMsgChan)
 
 	fmt.Println("socketHandlerB ending...")
 	//forever := make(chan bool)

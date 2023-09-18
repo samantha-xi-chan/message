@@ -7,6 +7,7 @@ import (
 	"log"
 	pb "message/api/proto"
 	"message/internal/domain"
+	"strings"
 	"time"
 )
 
@@ -16,10 +17,20 @@ const (
 )
 
 func main() {
-	for i := 0; i < 200; i++ {
+	var builder strings.Builder
+
+	// 在builder中添加大量文本
+	for i := 0; i < 10000; i++ {
+		builder.WriteString("这是一行文本")
+	}
+
+	// 获取生成的大字符串
+	result := builder.String()
+
+	for i := 0; i < 20; i++ {
 		go func() {
 			for x := 0; x < 100000000000000; x++ {
-				send()
+				send(&result)
 				//time.Sleep(time.Millisecond * 10)
 			}
 		}()
@@ -34,7 +45,7 @@ func main() {
 	select {}
 }
 
-func send() {
+func send(str *string) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -57,7 +68,8 @@ func send() {
 	// 任务过程中的细节变化
 	for i := 0; i <= 2; i++ {
 		tick := time.Now().UnixNano() / 1e6
-		val := "test_msg_2"
+		//val := "test_msg_2"
+		val := *str
 		r, err := c.FeedSessionStream(ctx, &pb.FeedSessionStreamReq{SessionId: SessionID6, Timestamp: tick, Payload: val})
 		if err != nil {
 			log.Fatalf("could not FeedSessionStream: %v", err)
