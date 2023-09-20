@@ -102,26 +102,6 @@ func MainModeSink() {
 	}
 	log.Println(res)
 
-	/*
-		go func() {
-			for d := range msgs_normal {
-				log.Printf("recv msgs_normal = %s", d.Body)
-
-				info := domain.FeedSessionStream{}
-				json.Unmarshal(d.Body, &info)
-
-				//fmt.Printf("Unmarshal result: %v\n", info)
-
-				// 落盘
-				ctx, cancel = context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
-				defer cancel()
-				res, _ := collection_log.InsertOne(ctx,
-					bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted": false})
-				fmt.Printf("res.InsertedID: %v\n", res.InsertedID)
-			}
-		}()
-	*/
-
 	msgs_normal_buffered := make(chan []byte, 10)
 	go func() {
 		for dd := range msgs_normal {
@@ -133,9 +113,7 @@ func MainModeSink() {
 	go func() {
 		batchData := []interface{}{}
 
-		const batchSize = 100
-		const timeout = 1 * time.Second
-		timer := time.NewTimer(timeout)
+		timer := time.NewTimer(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 		for {
 			select {
 			case d, ok := <-msgs_normal_buffered:
@@ -146,11 +124,11 @@ func MainModeSink() {
 				info := domain.FeedSessionStream{}
 				json.Unmarshal(d, &info)
 				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted2": false})
-				if len(batchData) >= batchSize {
+				if len(batchData) >= config.BATCH_SIZE {
 					collection_log.InsertMany(ctx, batchData)
 					log.Println("batchData.size batchSize log: ", len(batchData))
 					batchData = nil
-					timer.Reset(timeout)
+					timer.Reset(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 				}
 			case <-timer.C:
 				if len(batchData) > 0 {
@@ -158,7 +136,7 @@ func MainModeSink() {
 					log.Println("batchData.size timer log: ", len(batchData))
 					batchData = nil
 				}
-				timer.Reset(timeout)
+				timer.Reset(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 			}
 		}
 	}()
@@ -182,27 +160,8 @@ func MainModeSink() {
 		close(msgs_high_buffered)
 	}()
 	go func() {
-		/*
-			for d := range msgs_high {
-				log.Printf("recv msgs_high =%s", d.Body)
-
-				info := domain.UpdateSessionStatus{}
-				json.Unmarshal(d.Body, &info)
-
-				//fmt.Printf("Unmarshal result: %v\n", info)
-
-				ctx, cancel = context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
-				defer cancel()
-				res, _ := collection_status.InsertOne(ctx,
-					bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted": false})
-				fmt.Printf("res.InsertedID: %v\n", res.InsertedID)
-			}
-		*/
 		batchData := []interface{}{}
-
-		const batchSize = 100
-		const timeout = 1 * time.Second
-		timer := time.NewTimer(timeout)
+		timer := time.NewTimer(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 		for {
 			select {
 			case d, ok := <-msgs_high_buffered:
@@ -214,11 +173,11 @@ func MainModeSink() {
 				info := domain.UpdateSessionStatus{}
 				json.Unmarshal(d, &info)
 				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted2": false})
-				if len(batchData) >= batchSize {
+				if len(batchData) >= config.BATCH_SIZE {
 					collection_status.InsertMany(ctx, batchData)
 					log.Println("batchData.size batchSize status: ", len(batchData))
 					batchData = nil
-					timer.Reset(timeout)
+					timer.Reset(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 				}
 			case <-timer.C:
 				if len(batchData) > 0 {
@@ -226,7 +185,7 @@ func MainModeSink() {
 					log.Println("batchData.size timer status: ", len(batchData))
 					batchData = nil
 				}
-				timer.Reset(timeout)
+				timer.Reset(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 			}
 		}
 

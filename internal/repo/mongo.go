@@ -18,7 +18,6 @@ const ( // QueryStatus
 	ERR_OK           = 0
 	ERR_NOT_FOUND    = 1404
 	ERR_INVALID_PARA = 1500
-	ERR_OTHER        = 1999
 )
 
 var collection_log *mongo.Collection

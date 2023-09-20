@@ -37,8 +37,8 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 	defer conn.Close()
 
 	//r_chan := make(chan []byte, 2)
-	wMsgChan := make(chan []byte, 99999)
-	wCtrlChan := make(chan []byte, 9999)
+	wMsgChan := make(chan []byte, config.BUF_SIZE)
+	wCtrlChan := make(chan []byte, config.BUF_SIZE)
 
 	go func() {
 		for {
@@ -64,25 +64,21 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 	}()
 
 	for {
-		_, pl, err := conn.ReadMessage()
+		_, payload, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("Error during message reading:", err)
 			break
 		}
-		log.Printf("Received: %s", pl)
+		log.Printf("Received: %s", payload)
 
-		if string(pl) == "ping" {
-			wCtrlChan <- pl
-			//if err := conn.WriteMessage(messageType, pl); err != nil {
-			//	log.Println(err)
-			//}
-
+		if string(payload) == "ping" {
+			wCtrlChan <- payload
 			continue
 		}
 
 		// 解析是否是订阅,如果是订阅则新增映射
 		req := api.WsReq{}
-		e := json.Unmarshal(pl, &req)
+		e := json.Unmarshal(payload, &req)
 		if e != nil {
 			log.Println("Unmarshal err: ", e)
 			continue
@@ -94,34 +90,26 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 			// unmarshal it (usually after receiving bytes from somewhere)
 			sub := &api.Subscribe{}
 			wsReq := api.WsReq{Payload: sub}
-			json.Unmarshal(pl, &wsReq)
+			json.Unmarshal(payload, &wsReq)
 
-			//bytes := []byte(fmt.Sprintf("%v", req.Payload.(interface{})))
-			//log.Printf("bytes: %s", string(bytes))
-			//json.Unmarshal(bytes, &sub)
 			topic = sub.Topic
 			log.Printf("topic: %s", topic)
 			if map_topic_chanset[topic] == nil {
-				// 新建一条 map的KV记录
 				log.Printf("new map KV: %s", topic)
 				map_topic_chanset[topic] = mapset.NewSet()
 			}
 			map_topic_chanset[topic].Add(wMsgChan)
 
-			// 暂时不需要其他处理 其实可以直接丢弃
-			//r_chan <- message
 		} else {
 			log.Println("req.Type and ver not supported: ")
 			continue
 		}
 	}
 
-	// 移除当前 topic 对本次发送缓冲区的映射
 	map_topic_chanset[topic].Remove(wMsgChan)
 
 	fmt.Println("socketHandlerB ending...")
-	//forever := make(chan bool)
-	//<-forever
+	select {}
 }
 
 func MainModeNotify() {
