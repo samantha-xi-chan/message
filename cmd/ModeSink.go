@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"message/internal/repo"
 	"message/internal/service"
 	"message/package/util_debug"
 
@@ -42,6 +43,16 @@ func MainModeSink() {
 
 		log.Println("GetDebugPprofSink addr: ", addr)
 		go util_debug.InitPProf(addr)
+	}
+
+	redisDsn, e := config.GetDependRedisDsn()
+	if e != nil {
+		log.Fatal("GetDependRedisDsn: ", e)
+	}
+	log.Println("redisDsn: ", redisDsn)
+	e = repo.InitRedis(context.Background(), redisDsn, 0, 0)
+	if e != nil {
+		log.Fatal("InitRedis: ", e)
 	}
 
 	v, _ := config.GetDependQueue()
@@ -121,8 +132,12 @@ func MainModeSink() {
 					log.Println("msgs_high_buffered closed, exiting loop")
 					return
 				}
+
 				info := domain.FeedSessionStream{}
 				json.Unmarshal(d, &info)
+
+				repo.GetRedisMgr().NewLog(ctx, true, info.SessionID, string(d))
+
 				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted2": false})
 				if len(batchData) >= config.BATCH_SIZE {
 					collection_log.InsertMany(ctx, batchData)

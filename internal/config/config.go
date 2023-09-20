@@ -36,6 +36,12 @@ func GetDependMongo() (string, error) {
 	return v, nil
 }
 
+func GetDependRedisDsn() (string, error) {
+	v := viper.GetString("depend.redis_dsn")
+
+	return v, nil
+}
+
 func GetGwPortHttp() (string, error) {
 	port := viper.GetString("gateway.port_http")
 	return port, nil

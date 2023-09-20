@@ -8,6 +8,7 @@ import (
 	"message/api"
 	"message/internal/config"
 	"message/internal/repo"
+	"message/internal/router"
 	"message/package/util_debug"
 	"strconv"
 	"strings"
@@ -32,9 +33,17 @@ func MainModeGateway() {
 	v, _ := config.GetDependMongo()
 	repo.InitMongo(v)
 
-	fetchSession := func(c *gin.Context) {
-		//  todo： 增加分页查询的保护，避免单次请求数据量过大
+	redisDsn, e := config.GetDependRedisDsn()
+	if e != nil {
+		log.Fatal("GetDependRedisDsn: ", e)
+	}
+	log.Println("redisDsn: ", redisDsn)
+	e = repo.InitRedis(context.Background(), redisDsn, 0, 0)
+	if e != nil {
+		log.Fatal("InitRedis: ", e)
+	}
 
+	fetchSession := func(c *gin.Context) {
 		sessionID := c.Param("session_id")
 		pageID := c.Query("page_id")
 		pageSize := c.Query("page_size")
@@ -92,16 +101,21 @@ func MainModeGateway() {
 		c.JSON(200, body)
 	}
 
-	router := gin.Default()
-	v1 := router.Group("/api/v1/sessions")
+	r := gin.Default()
+	v1 := r.Group("/api/v1/sessions")
 	{
 		v1.GET("/:session_id", fetchSession) // const SESSION_ID = "ID10006666"  // curl localhost:8080/api/v1/session/ID10006666
 	}
-	v2 := router.Group("/api/v2/sessions")
+	v2 := r.Group("/api/v2/sessions")
 	{
 		v2.GET("/:session_id", fetchSessionV2)
 	}
+	v1r := r.Group("/api/v1r/session")
+	{
+		//v1r.GET("/:session_id", router.GetSessionV2)
+		v1r.GET("", router.GetSessionV2)
+	}
 
 	val, _ := config.GetGwPortHttp()
-	router.Run(val)
+	r.Run(val)
 }
