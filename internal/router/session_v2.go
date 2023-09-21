@@ -12,6 +12,19 @@ import (
 
 func GetSessionV2(c *gin.Context) {
 	ctx := context.Background()
+	sessionID := c.Param("session_id")
+
+	if sessionID == "" {
+		c.JSON(http.StatusOK, apiv2.HttpRespBody{
+			Code: 2000,
+			Msg:  "",
+			Data: apiv2.QueryGetSessionResp{
+				Obj:   nil,
+				Total: 0,
+			},
+		})
+		return
+	}
 
 	var query apiv2.QueryGetSessionReq
 	if err := c.BindJSON(&query); err != nil {
@@ -28,8 +41,7 @@ func GetSessionV2(c *gin.Context) {
 
 	log.Printf("query: %#v \n", query)
 
-	//repo.GetRedisMgr().Traversal(ctx, true, query.SessionId, true)
-	elem, total, e := repo.GetRedisMgr().Query(ctx, true, query.SessionId, !query.TimeAsc, query.PageId, query.PageSize)
+	elem, total, e := repo.GetRedisMgr().Query(ctx, true, sessionID, !query.TimeAsc, query.PageId, query.PageSize)
 	if e != nil {
 
 		return
@@ -37,7 +49,6 @@ func GetSessionV2(c *gin.Context) {
 
 	interfaces, e := util_struct.MultiConvertJsonStr2Interface(elem)
 	if e != nil {
-
 		log.Println("e: ", e)
 	}
 

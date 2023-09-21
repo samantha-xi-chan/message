@@ -17,4 +17,3 @@ HOST=117_root ; ssh $HOST "pkill -f 'msg -mode notify' "; ssh $HOST "cd /root/ms
 
 
 
-req=$(cat ./test10/session_req.json) ; echo "$req" ; curl -X GET "http://192.168.31.117:18081/api/v1r/session"  -H "request-id: $RANDOM" -d "$req"
