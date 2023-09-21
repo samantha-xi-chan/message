@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/gorilla/websocket"
+	"github.com/streadway/amqp"
 	"log"
 	api "message/api/domain"
 	"message/internal/domain"
@@ -15,9 +15,16 @@ import (
 	"net/http"
 )
 
-var map_topic_chanset map[string](mapset.Set)
+const WildcardAsterisk = "*"
 
-var upgrader = websocket.Upgrader{
+var mapTopicChanSet map[string](mapset.Set)
+
+func initMap() {
+	mapTopicChanSet = make(map[string](mapset.Set))
+	mapTopicChanSet[WildcardAsterisk] = mapset.NewSet()
+}
+
+var upgrade = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
@@ -26,17 +33,14 @@ var upgrader = websocket.Upgrader{
 }
 
 func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connection work
-	var topic = "default"
-	//upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-	// Upgrade our raw HTTP connection to a websocket based one
-	conn, err := upgrader.Upgrade(w, r, nil)
+	var handlerTopic = "default"
+	conn, err := upgrade.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("Error during connection upgrade:", err)
 		return
 	}
 	defer conn.Close()
 
-	//r_chan := make(chan []byte, 2)
 	wMsgChan := make(chan []byte, config.BUF_SIZE)
 	wCtrlChan := make(chan []byte, config.BUF_SIZE)
 
@@ -69,14 +73,13 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 			log.Println("Error during message reading:", err)
 			break
 		}
-		log.Printf("Received: %s", payload)
+		log.Printf("Received: %s", payload) // debug level
 
 		if string(payload) == "ping" {
 			wCtrlChan <- payload
 			continue
 		}
 
-		// 解析是否是订阅,如果是订阅则新增映射
 		req := api.WsReq{}
 		e := json.Unmarshal(payload, &req)
 		if e != nil {
@@ -85,31 +88,39 @@ func socketHandlerB(w http.ResponseWriter, r *http.Request) { // block if connec
 		}
 
 		if req.Type == config.TYPE_SUBSCRIBE && req.Version == config.WS_PROTO_VER {
-			//sub := api.Subscribe{}
-
-			// unmarshal it (usually after receiving bytes from somewhere)
 			sub := &api.Subscribe{}
 			wsReq := api.WsReq{Payload: sub}
 			json.Unmarshal(payload, &wsReq)
 
-			topic = sub.Topic
-			log.Printf("topic: %s", topic)
-			if map_topic_chanset[topic] == nil {
-				log.Printf("new map KV: %s", topic)
-				map_topic_chanset[topic] = mapset.NewSet()
-			}
-			map_topic_chanset[topic].Add(wMsgChan)
+			currentTopic := sub.Topic
+			log.Printf("handlerTopic:%s topic: %s", handlerTopic, currentTopic)
 
+			if currentTopic == WildcardAsterisk {
+				mapTopicChanSet[WildcardAsterisk].Add(wMsgChan)
+			} else {
+				if mapTopicChanSet[currentTopic] == nil {
+					mapTopicChanSet[currentTopic] = mapset.NewSet()
+				}
+				mapTopicChanSet[currentTopic].Add(wMsgChan)
+			}
+			handlerTopic = currentTopic
 		} else {
 			log.Println("req.Type and ver not supported: ")
 			continue
 		}
 	}
 
-	map_topic_chanset[topic].Remove(wMsgChan)
+	mapTopicChanSet[handlerTopic].Remove(wMsgChan)
 
-	fmt.Println("socketHandlerB ending...")
-	select {}
+	//fmt.Println("socketHandlerB ending...")
+}
+
+func processMessages(ch <-chan amqp.Delivery, label string) {
+	for d := range ch {
+		log.Printf("%s: %s", label, d.Body)
+		bytes := []byte(d.Body)
+		broadcast(bytes)
+	}
 }
 
 func MainModeNotify() {
@@ -128,28 +139,34 @@ func MainModeNotify() {
 		go util_debug.InitPProf(addr)
 	}
 
+	initMap()
+
 	v, _ := config.GetDependQueue()
+	msgHigh, _ := service.QueueConnInit(v, config.EXCHANGE_HIGH)
+	msgNormal, _ := service.QueueConnInit(v, config.EXCHANGE_NORMAL)
 
-	msgs_high, _ := service.QueueConnInit(v, config.EXCHANGE_HIGH)
-	msgs_normal, _ := service.QueueConnInit(v, config.EXCHANGE_NORMAL)
-
-	map_topic_chanset = make(map[string](mapset.Set))
-	//map_topic_chanset[TOPIC] = mapset.NewSet() // todo: 移除 改为 后期新增订阅时 如果没有这条KV映射则新增set并增加map映射， 如果有则增加set内容
+	//go func() {
+	//	for d := range msgHigh {
+	//		log.Printf("msgHigh.d: %s", d.Body)
+	//
+	//		bytes := []byte(d.Body)
+	//		broadcast(bytes)
+	//	}
+	//}()
+	//go func() {
+	//	for d := range msgNormal {
+	//		log.Printf("msgNormal.new=%s", d.Body)
+	//		bytes := []byte(d.Body)
+	//		broadcast(bytes)
+	//	}
+	//}()
 
 	go func() {
-		for d := range msgs_high {
-			log.Printf("msgs_high.d: %s", d.Body)
-
-			bytes := []byte(d.Body)
-			broadcast(bytes)
-		}
+		processMessages(msgHigh, "msgHigh")
 	}()
+
 	go func() {
-		for d := range msgs_normal {
-			log.Printf("msgs_normal.new=%s", d.Body)
-			bytes := []byte(d.Body)
-			broadcast(bytes)
-		}
+		processMessages(msgNormal, "msgNormal")
 	}()
 
 	http.HandleFunc("/api/v1/socket", socketHandlerB)
@@ -166,12 +183,15 @@ func broadcast(bytes []byte) {
 	} else {
 		log.Println("feedSessionStream: ", feedSessionStream)
 	}
-	session_id := feedSessionStream.SessionID
-	if map_topic_chanset[session_id] != nil {
-		// broadcast 至特定的 session
-		for val := range map_topic_chanset[session_id].Iterator().C {
+	sessionId := feedSessionStream.SessionID
+	if mapTopicChanSet[sessionId] != nil {
+		for val := range mapTopicChanSet[sessionId].Iterator().C {
 			val.(chan []byte) <- bytes
 		}
+	}
+	// if WILDCARD_ASTERISK enabled
+	for val := range mapTopicChanSet[WildcardAsterisk].Iterator().C {
+		val.(chan []byte) <- bytes
 	}
 
 }

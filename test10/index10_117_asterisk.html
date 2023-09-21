@@ -92,9 +92,8 @@
     // WebSocket configuration
     const host = "192.168.31.117";
     const port = 9102;
-    const topic = "topic_all";
+    const topic = "*";
     const wsUrl = `ws://${host}:${port}/api/v1/socket`;
-    // const wsUrl = `ws://192.168.32.13:8080/socket`;
 
     const HEARTBEAT_INTERVAL = 2000;
     const reconnectInterval = 1000;
