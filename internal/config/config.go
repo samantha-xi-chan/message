@@ -38,7 +38,11 @@ func GetDependMongo() (string, error) {
 
 func GetDependRedisDsn() (string, error) {
 	v := viper.GetString("depend.redis_dsn")
+	return v, nil
+}
 
+func GetStoreMaxCount() (int64, error) {
+	v := viper.GetInt64("store.max_count")
 	return v, nil
 }
 

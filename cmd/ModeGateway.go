@@ -34,7 +34,14 @@ func MainModeGateway() {
 		log.Fatal("GetDependRedisDsn: ", e)
 	}
 	log.Println("redisDsn: ", redisDsn)
-	e = repo.InitRedis(context.Background(), redisDsn, 0, 0)
+
+	storeMaxCount, e := config.GetStoreMaxCount()
+	if e != nil {
+		log.Fatal("GetStoreMaxCount: ", e)
+	}
+	log.Println("storeMaxCount: ", storeMaxCount)
+
+	e = repo.InitRedis(context.Background(), redisDsn, storeMaxCount, 0)
 	if e != nil {
 		log.Fatal("InitRedis: ", e)
 	}
@@ -48,10 +55,15 @@ func MainModeGateway() {
 	{
 		v2.GET("/:session_id", router.FetchSessionV2)
 	}
-	v1r := r.Group("/api/v1r/session")
+	v1rLog := r.Group("/msg/api/v1r/log/session")
 	{
 		//v1r.GET("/:session_id", router.GetSessionV2)
-		v1r.GET("/:session_id", router.GetSessionV2)
+		v1rLog.GET("/:session_id", router.GetSessionV2)
+	}
+	v1rStatus := r.Group("/msg/api/v1r/status/session")
+	{
+		//v1r.GET("/:session_id", router.GetSessionV2)
+		v1rStatus.GET("/:session_id", router.GetSessionV2)
 	}
 
 	val, _ := config.GetGwPortHttp()

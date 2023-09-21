@@ -12,9 +12,9 @@ import (
 
 func GetSessionV2(c *gin.Context) {
 	ctx := context.Background()
-	sessionID := c.Param("session_id")
+	sessionId := c.Param("session_id")
 
-	if sessionID == "" {
+	if sessionId == "" {
 		c.JSON(http.StatusOK, apiv2.HttpRespBody{
 			Code: 2000,
 			Msg:  "",
@@ -41,9 +41,12 @@ func GetSessionV2(c *gin.Context) {
 
 	log.Printf("query: %#v \n", query)
 
-	elem, total, e := repo.GetRedisMgr().Query(ctx, true, sessionID, !query.TimeAsc, query.PageId, query.PageSize)
+	elem, total, e := repo.GetRedisMgr().Query(ctx, true, sessionId, query.TimeAsc, query.PageId, query.PageSize)
 	if e != nil {
-
+		c.JSON(http.StatusOK, apiv2.HttpRespBody{
+			Code: 2001,
+			Msg:  "",
+		})
 		return
 	}
 

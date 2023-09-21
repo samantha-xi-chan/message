@@ -22,12 +22,12 @@ func GetRedisMgr() (x *RedisManager) {
 	return &redisManager
 }
 
-func InitRedis(ctx context.Context, dsn string, logLevel int, slowThresholdMs int) (e error) {
+func InitRedis(ctx context.Context, dsn string, maxSize int64, slowThresholdMs int) (e error) {
 	//KEY := time.Now().String()
 	redisManager = RedisManager{
 		Address: dsn,
 		Client:  nil,
-		MaxSize: 5,
+		MaxSize: maxSize,
 	}
 
 	return redisManager.Init(ctx)
@@ -134,6 +134,7 @@ func (mgr *RedisManager) Query(ctx context.Context, trim bool, key string, timeA
 		return nil, 0, errors.New("TMD")
 	}
 
+	// 时间 降序
 	start := int64(pageSize * (pageId - 1))
 	stop := int64(pageSize * pageId)
 
@@ -149,17 +150,26 @@ func (mgr *RedisManager) Query(ctx context.Context, trim bool, key string, timeA
 		return
 	}
 
-	if !timeAsc {
-		log.Println("List elements:")
-		for _, element := range elements {
-			log.Println(element)
-		}
-	} else {
+	log.Println("List elements :")
+	for _, element := range elements {
+		log.Println(element)
+	}
 
-		for i := len(elements) - 1; i >= 0; i-- {
-			fmt.Println(elements[i])
-		}
+	if timeAsc {
+		reverseArray(elements)
+	}
+
+	log.Println("List elements result:")
+	for _, element := range elements {
+		log.Println(element)
 	}
 
 	return elements, total, nil
+}
+
+func reverseArray(arr []string) {
+	length := len(arr)
+	for i := 0; i < length/2; i++ {
+		arr[i], arr[length-i-1] = arr[length-i-1], arr[i]
+	}
 }
