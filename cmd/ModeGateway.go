@@ -47,20 +47,21 @@ func MainModeGateway() {
 	}
 
 	r := gin.Default()
-	v1 := r.Group("/api/v1/sessions")
-	{
-		v1.GET("/:session_id", router.FetchSession)
-	}
-	v2 := r.Group("/api/v2/sessions")
-	{
-		v2.GET("/:session_id", router.FetchSessionV2)
-	}
-	v1rLog := r.Group("/msg/api/v1r/log/session")
+	//v1 := r.Group("/api/v1/sessions")
+	//{
+	//	v1.GET("/:session_id", router.FetchSession)
+	//}
+	//v2 := r.Group("/api/v2/sessions")
+	//{
+	//	v2.GET("/:session_id", router.FetchSessionV2)
+	//}
+	v1rLog := r.Group("/msg/api/v1/log/session")
 	{
 		//v1r.GET("/:session_id", router.GetSessionV2)
-		v1rLog.GET("/:session_id", router.GetSessionV2)
+		v1rLog.GET("/:session_id", router.GetSessionV2) // tmp, GET method don't support reqBody
+		v1rLog.POST("/:session_id", router.GetSessionV2)
 	}
-	v1rStatus := r.Group("/msg/api/v1r/status/session")
+	v1rStatus := r.Group("/msg/api/v1/status/session")
 	{
 		//v1r.GET("/:session_id", router.GetSessionV2)
 		v1rStatus.GET("/:session_id", router.GetSessionV2)

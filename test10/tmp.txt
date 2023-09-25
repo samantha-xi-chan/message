@@ -6,7 +6,7 @@
 
 BASE_PATH=~/GolandProjects/message ;
 cd $BASE_PATH ;
-HOST=7_root
+HOST=34196_root
 ssh $HOST "ps aux | grep msg" ; ssh $HOST "killall msg ; rm -rf  /root/msg/ ; mkdir -p /root/msg/" ;  scp -r ./config  $HOST:/root/msg/config; make build ; scp ./bin/message  $HOST:/root/msg/msg;
 
 # 启动应用程序 117
@@ -14,6 +14,4 @@ HOST=117_root ; ssh $HOST "pkill -f 'msg -mode waiter' "; ssh $HOST "cd /root/ms
 HOST=117_root ; ssh $HOST "pkill -f 'msg -mode sink' "; ssh $HOST "cd /root/msg/; ./msg -mode sink"
 HOST=117_root ; ssh $HOST "pkill -f 'msg -mode gateway' "; ssh $HOST "cd /root/msg/; ./msg -mode gateway"
 HOST=117_root ; ssh $HOST "pkill -f 'msg -mode notify' "; ssh $HOST "cd /root/msg/; ./msg -mode notify"
-
-
 

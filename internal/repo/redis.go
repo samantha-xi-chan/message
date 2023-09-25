@@ -2,9 +2,9 @@ package repo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/go-redis/redis/v8"
+	"github.com/pkg/errors"
 	"log"
 )
 
@@ -108,6 +108,21 @@ func (mgr *RedisManager) Traversal(ctx context.Context, trim bool, key string, s
 	}
 
 	return nil
+}
+
+func (mgr *RedisManager) Exists(ctx context.Context, key string) (bool, error) {
+
+	exists, err := mgr.Client.Exists(context.Background(), key).Result()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return false, errors.Wrap(err, ".Exists: ")
+	}
+
+	if exists == 1 {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
 
 func (mgr *RedisManager) Query(ctx context.Context, trim bool, key string, timeAsc bool, pageId int, pageSize int) (elem []string, total int64, e error) {

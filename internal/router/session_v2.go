@@ -16,12 +16,8 @@ func GetSessionV2(c *gin.Context) {
 
 	if sessionId == "" {
 		c.JSON(http.StatusOK, apiv2.HttpRespBody{
-			Code: 2000,
-			Msg:  "",
-			Data: apiv2.QueryGetSessionResp{
-				Obj:   nil,
-				Total: 0,
-			},
+			Code: apiv2.ERR_URL_ID,
+			Msg:  "ERR_URL_ID",
 		})
 		return
 	}
@@ -29,30 +25,33 @@ func GetSessionV2(c *gin.Context) {
 	var query apiv2.QueryGetSessionReq
 	if err := c.BindJSON(&query); err != nil {
 		c.JSON(http.StatusOK, apiv2.HttpRespBody{
-			Code: 1000,
-			Msg:  "",
-			Data: apiv2.QueryGetSessionResp{
-				Obj:   nil,
-				Total: 0,
-			},
+			Code: apiv2.ERR_FORMAT,
+			Msg:  "ERR_FORMAT",
 		})
 		return
 	}
 
 	log.Printf("query: %#v \n", query)
 
+	// todo: check if it really exists
+	// repo.GetRedisMgr().Exists()
+
 	elem, total, e := repo.GetRedisMgr().Query(ctx, true, sessionId, query.TimeAsc, query.PageId, query.PageSize)
 	if e != nil {
 		c.JSON(http.StatusOK, apiv2.HttpRespBody{
-			Code: 2001,
-			Msg:  "",
+			Code: apiv2.ERR_OTHER,
+			Msg:  "ERR_OTHER",
 		})
 		return
 	}
 
 	interfaces, e := util_struct.MultiConvertJsonStr2Interface(elem)
 	if e != nil {
-		log.Println("e: ", e)
+		c.JSON(http.StatusOK, apiv2.HttpRespBody{
+			Code: apiv2.ERR_OTHER,
+			Msg:  "ERR_OTHER",
+		})
+		return
 	}
 
 	log.Printf("interfaces: %#v \n", interfaces)
