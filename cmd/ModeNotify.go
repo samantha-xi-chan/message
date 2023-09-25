@@ -15,14 +15,14 @@ import (
 	"net/http"
 )
 
-const WildcardAsterisk = "*"
+const (
+//
+)
 
-var mapTopicChanSet map[string](mapset.Set)
-
-func initMap() {
-	mapTopicChanSet = make(map[string](mapset.Set))
-	mapTopicChanSet[WildcardAsterisk] = mapset.NewSet()
-}
+var (
+	WildcardAsterisk = "*"
+	mapTopicChanSet  = make(map[string](mapset.Set))
+)
 
 var upgrade = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -139,7 +139,7 @@ func MainModeNotify() {
 		go util_debug.InitPProf(addr)
 	}
 
-	initMap()
+	mapTopicChanSet[WildcardAsterisk] = mapset.NewSet()
 
 	v, _ := config.GetDependQueue()
 	msgHigh, _ := service.QueueConnInit(v, config.EXCHANGE_HIGH)

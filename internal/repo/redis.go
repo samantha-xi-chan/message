@@ -59,7 +59,7 @@ func (mgr *RedisManager) NewLog(ctx context.Context, trim bool, key string, val 
 	if trim {
 		_, e = mgr.Client.LTrim(ctx, key, 0, mgr.MaxSize-1).Result()
 		if e != nil {
-			log.Println("e: ", e)
+			log.Println("NewLog LTrim e: ", e)
 		}
 	}
 
@@ -73,7 +73,7 @@ func (mgr *RedisManager) NewLogMulti(ctx context.Context, trim bool, key string,
 	if trim {
 		_, e = mgr.Client.LTrim(ctx, key, 0, mgr.MaxSize-1).Result()
 		if e != nil {
-			log.Println("e: ", e)
+			log.Println("NewLogMulti LTrim e: ", e)
 		}
 	}
 
@@ -85,7 +85,7 @@ func (mgr *RedisManager) Traversal(ctx context.Context, trim bool, key string, s
 	if trim {
 		_, e = mgr.Client.LTrim(ctx, key, 0, mgr.MaxSize-1).Result()
 		if e != nil {
-			log.Println("e: ", e)
+			log.Println("Traversal LTrim e: ", e)
 			return e
 		}
 	}
@@ -128,7 +128,7 @@ func (mgr *RedisManager) Query(ctx context.Context, trim bool, key string, timeA
 		return nil, total, nil
 	}
 
-	maxPageId := total / int64(pageSize)
+	maxPageId := total/int64(pageSize) + 1
 
 	if int64(pageId) > maxPageId {
 		return nil, 0, errors.New("TMD")
