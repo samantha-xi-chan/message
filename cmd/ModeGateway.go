@@ -61,6 +61,11 @@ func MainModeGateway() {
 		v1rLog.GET("/:session_id", router.GetSessionV2) // tmp, GET method don't support reqBody
 		v1rLog.POST("/:session_id", router.GetSessionV2)
 	}
+	v2Log := r.Group("/msg/api/v2/log/session")
+	{
+		v2Log.GET("/:session_id", router.GetSessionV2Log)
+	}
+
 	v1rStatus := r.Group("/msg/api/v1/status/session")
 	{
 		//v1r.GET("/:session_id", router.GetSessionV2)

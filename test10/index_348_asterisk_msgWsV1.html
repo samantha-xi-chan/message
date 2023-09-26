@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Real-Time Status and Auto-Reconnect</title>
+    <style>
+        #status-bar {
+            height: 30px;
+            width: 100%;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px;
+        }
+        .online {
+            background-color: green;
+            color: white;
+        }
+        .half {
+            background-color: deepskyblue;
+            color: white;
+        }
+        .offline {
+            background-color: red;
+            color: white;
+        }
+
+        #history-count {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        #console-output {
+            position: fixed;
+            top: 50px;
+            left: 10px;
+            color: black;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<div id="status-bar" class="offline">Offline</div>
+<div id="history-count">Message Count: 1</div>
+<div id="console-output"></div>
+
+<script>
+    let messageCount = 0; // Initialize the message count
+    let historyCount = 0;
+
+    const maxMessageCount = 50; // Set a maximum message count
+
+    // Function to log messages to the console and display them on the page
+    function logToConsoleAndPage(message) {
+        const consoleOutputDiv = document.getElementById("console-output");
+
+        const messageDiv = document.createElement("div");
+        messageDiv.innerText =  message;
+
+        messageCount++;
+        historyCount++;
+
+        // Create a document fragment to batch append messages
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(messageDiv);
+
+        // Append the fragment to the console output
+        consoleOutputDiv.appendChild(fragment);
+
+        // Check if the message count exceeds the maximum
+        if (messageCount > maxMessageCount) {
+            // Remove old messages
+            const messageDivs = consoleOutputDiv.querySelectorAll("div");
+            const removeCount = messageCount - maxMessageCount;
+            for (let i = 0; i < removeCount; i++) {
+                consoleOutputDiv.removeChild(messageDivs[i]);
+            }
+            messageCount = maxMessageCount; // Reset the message count
+        }
+
+        const historyCountDiv = document.getElementById("history-count");
+        historyCountDiv.textContent = `historyCount: ${historyCount}`;
+    }
+
+
+    // WebSocket configuration
+    const host = "192.168.34.8";
+    const port = 80;
+    const topic = "*";
+    // const wsUrl = `ws://${host}:${port}/api/v1/socket`;
+    const wsUrl = `ws://${host}:${port}/msg/ws/v1/socket`;
+
+    const HEARTBEAT_INTERVAL = 2000;
+    const reconnectInterval = 1000;
+
+    let heartbeatInterval ;
+    let lastHeartbeatTime = Date.now();
+
+    let ws;
+    let statusBar = document.getElementById("status-bar");
+
+    function updateStatusBar(status) {
+        statusBar.textContent = status;
+        // statusBar.className = status.startsWith("online") ? "online" : "offline";
+        if (status.startsWith("online")) {
+            statusBar.className = "online";
+        } else if (status.startsWith("half")) {
+            statusBar.className = "half";
+        } else {
+            statusBar.className = "offline";
+        }
+    }
+
+    function connectWebSocket() {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+            updateStatusBar("online, ws.onopen ");
+            lastHeartbeatTime = Date.now()
+
+            heartbeatInterval = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    console.log("heartbeatInterval considered OPEN by js api")
+                    ws.send('ping');
+
+                    if  (Date.now() -  lastHeartbeatTime > HEARTBEAT_INTERVAL*2 ){
+                        updateStatusBar("half, considered OPEN by js api , but heartbeat response timeout ");
+                    }
+                } else {
+                    console.log("heartbeatInterval not OPEN")
+                    clearInterval(heartbeatInterval);
+                    updateStatusBar("offline, not WebSocket.OPEN");
+                }
+            }, HEARTBEAT_INTERVAL);
+
+            // biz code .....
+            const message = {
+                type: 1001,
+                version: 1,
+                payload: {
+                    topic: topic
+                }
+            };
+
+            ws.send(JSON.stringify(message));
+        };
+
+        ws.onmessage = (event) => {
+            if (event.data === 'ping') {
+                lastHeartbeatTime = Date.now()
+                updateStatusBar("online, lastHeartbeatTime updated ");
+            } else {
+                logToConsoleAndPage(new Date().getTime() + " NewMsg : " + event.data);
+            }
+        };
+        ws.onerror = (event) => {
+            logToConsoleAndPage(new Date().getTime() + " NewErr : " + event.data);
+        };
+
+        ws.onclose = (event) => {
+            if (event.wasClean) {
+                console.log(`onclose  wasClean， code：${event.code}，reason：${event.reason}`);
+                updateStatusBar("offline, Closed normally");
+            } else {
+                console.log("onclose not clean")
+                updateStatusBar("offline, attempting to reconnect...");
+                setTimeout(connectWebSocket, reconnectInterval);
+            }
+
+            clearInterval(heartbeatInterval);
+        };
+    }
+
+    connectWebSocket();
+</script>
+</body>
+</html>

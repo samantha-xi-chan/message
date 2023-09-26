@@ -7,4 +7,6 @@ const (
 	ERR_VALUE  = 910010602
 	ERR_URL_ID = 910010404
 	ERR_OTHER  = 910010999
+
+	WARNING_DEPRECATE = "warning: this api should be deprecated soon !!!! "
 )
