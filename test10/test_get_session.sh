@@ -3,7 +3,7 @@
 
 #req=$(cat ./test10/session_req.json) ;
 
-TaskId=task_1695701155504scsh
+TaskId=task_1695713810957dmlz
 
 # echo "$req" ; curl -X GET "http://192.168.34.8/msg/api/v1/log/session/$TaskId" -d "$req"; echo ;
 

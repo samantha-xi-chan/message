@@ -122,7 +122,7 @@ func MainModeSink() {
 	}()
 
 	go func() {
-		batchData := []interface{}{}
+		//batchData := []interface{}{}
 
 		timer := time.NewTimer(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 		for {
@@ -138,19 +138,19 @@ func MainModeSink() {
 
 				repo.GetRedisMgr().NewLog(ctx, true, info.SessionID, string(d))
 
-				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted2": false})
-				if len(batchData) >= config.BATCH_SIZE {
-					collection_log.InsertMany(ctx, batchData)
-					log.Println("batchData.size batchSize log: ", len(batchData))
-					batchData = nil
-					timer.Reset(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
-				}
+				//batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted2": false})
+				//if len(batchData) >= config.BATCH_SIZE {
+				//	collection_log.InsertMany(ctx, batchData)
+				//	log.Println("batchData.size batchSize log: ", len(batchData))
+				//	batchData = nil
+				//	timer.Reset(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
+				//}
 			case <-timer.C:
-				if len(batchData) > 0 {
-					collection_log.InsertMany(ctx, batchData)
-					log.Println("batchData.size timer log: ", len(batchData))
-					batchData = nil
-				}
+				//if len(batchData) > 0 {
+				//	collection_log.InsertMany(ctx, batchData)
+				//	log.Println("batchData.size timer log: ", len(batchData))
+				//	batchData = nil
+				//}
 				timer.Reset(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 			}
 		}
@@ -175,31 +175,31 @@ func MainModeSink() {
 		close(msgs_high_buffered)
 	}()
 	go func() {
-		batchData := []interface{}{}
+		//batchData := []interface{}{}
 		timer := time.NewTimer(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 		for {
 			select {
-			case d, ok := <-msgs_high_buffered:
+			case _, ok := <-msgs_high_buffered:
 				if !ok {
 					log.Println("msgs_high_buffered closed, exiting loop")
 					return
 				}
 
-				info := domain.UpdateSessionStatus{}
-				json.Unmarshal(d, &info)
-				batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted2": false})
-				if len(batchData) >= config.BATCH_SIZE {
-					collection_status.InsertMany(ctx, batchData)
-					log.Println("batchData.size batchSize status: ", len(batchData))
-					batchData = nil
-					timer.Reset(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
-				}
+				//info := domain.UpdateSessionStatus{}
+				//json.Unmarshal(d, &info)
+				//batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "evt_type": info.EvtType, "payload": info.Payload, "deleted2": false})
+				//if len(batchData) >= config.BATCH_SIZE {
+				//	collection_status.InsertMany(ctx, batchData)
+				//	log.Println("batchData.size batchSize status: ", len(batchData))
+				//	batchData = nil
+				//	timer.Reset(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
+				//}
 			case <-timer.C:
-				if len(batchData) > 0 {
-					collection_status.InsertMany(ctx, batchData)
-					log.Println("batchData.size timer status: ", len(batchData))
-					batchData = nil
-				}
+				//if len(batchData) > 0 {
+				//	collection_status.InsertMany(ctx, batchData)
+				//	log.Println("batchData.size timer status: ", len(batchData))
+				//	batchData = nil
+				//}
 				timer.Reset(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 			}
 		}
