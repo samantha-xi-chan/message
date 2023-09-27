@@ -94,7 +94,9 @@
     const port = 80;
     const topic = "*";
     // const wsUrl = `ws://${host}:${port}/api/v1/socket`;
-    const wsUrl = `ws://${host}:${port}/msg/ws/v1/socket`;
+    const currentHost = window.location.hostname || window.location.host || host;
+    logToConsoleAndPage( "currentHost：" +  currentHost )
+    const wsUrl = `ws://${currentHost}:${port}/msg/ws/v1/socket`;
 
     const HEARTBEAT_INTERVAL = 2000;
     const reconnectInterval = 1000;

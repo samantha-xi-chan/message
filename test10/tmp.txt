@@ -6,7 +6,8 @@
 
 BASE_PATH=~/GolandProjects/message ;
 cd $BASE_PATH ;
-HOST=348_root
+HOST=6_root
+# HOST=348_root
 ssh $HOST "ps aux | grep msg" ; ssh $HOST "killall msg ; rm -rf  /root/msg/ ; mkdir -p /root/msg/" ;  scp -r ./config  $HOST:/root/msg/config; make build ; scp ./bin/message  $HOST:/root/msg/msg;
 
 # 启动应用程序 117
