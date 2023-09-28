@@ -136,7 +136,7 @@ func MainModeSink() {
 				info := domain.FeedSessionStream{}
 				json.Unmarshal(d, &info)
 
-				repo.GetRedisMgr().NewLog(ctx, true, info.SessionID, string(d))
+				repo.GetRedisMgr().NewLog(context.Background(), true, info.SessionID, string(d))
 
 				//batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted2": false})
 				//if len(batchData) >= config.BATCH_SIZE {
