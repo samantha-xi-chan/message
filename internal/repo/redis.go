@@ -53,13 +53,18 @@ func (mgr *RedisManager) Init(ctx context.Context) (e error) {
 }
 
 func (mgr *RedisManager) NewLog(ctx context.Context, trim bool, key string, val string) (e error) {
-
-	mgr.Client.LPush(ctx, key, val)
+	result := mgr.Client.LPush(ctx, key, val)
+	if err := result.Err(); err != nil {
+		return errors.Wrap(err, fmt.Sprint("mgr.Client.LPush: key=", key))
+	} else {
+		log.Println("LPush ok, len(val)=", len(val))
+	}
 
 	if trim {
 		_, e = mgr.Client.LTrim(ctx, key, 0, mgr.MaxSize-1).Result()
 		if e != nil {
 			log.Println("NewLog LTrim e: ", e)
+			return errors.Wrap(e, ".LTrim(ctx, key ：")
 		}
 	}
 

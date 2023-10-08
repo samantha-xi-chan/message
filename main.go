@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"message/cmd"
+	"runtime"
 )
 
 var _mode = flag.String("mode", "empty", "work mode")
@@ -15,6 +16,15 @@ var (
 )
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered:", r)
+			stack := make([]byte, 1024*4)
+			runtime.Stack(stack, false)
+			log.Printf("stack: %s\n", stack)
+		}
+	}()
+
 	// debug
 	log.Println("BUILD_DATE: ", BUILD_DATE)
 	log.Println("GIT_BRANCH: ", GIT_BRANCH)

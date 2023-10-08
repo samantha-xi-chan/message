@@ -136,7 +136,10 @@ func MainModeSink() {
 				info := domain.FeedSessionStream{}
 				json.Unmarshal(d, &info)
 
-				repo.GetRedisMgr().NewLog(context.Background(), true, info.SessionID, string(d))
+				e := repo.GetRedisMgr().NewLog(context.Background(), true, info.SessionID, string(d))
+				if e != nil {
+					log.Println("GetRedisMgr().NewLog: ", e)
+				}
 
 				//batchData = append(batchData, bson.M{"session_id": info.SessionID, "timestamp": info.Timestamp, "payload": info.Payload, "deleted2": false})
 				//if len(batchData) >= config.BATCH_SIZE {
@@ -206,7 +209,7 @@ func MainModeSink() {
 
 	}()
 
-	fmt.Println("starting cron job")
+	//fmt.Println("starting cron job")
 	//c := cron.New()
 	//e := c.AddFunc("*/3 * * * *", func() {
 	collection_log2 := client.Database(config.DATABASE).Collection(config.COLLECTION_LOG)
