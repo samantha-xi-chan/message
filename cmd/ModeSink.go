@@ -125,7 +125,7 @@ func MainModeSink() {
 		//batchData := []interface{}{}
 
 		timer := time.NewTimer(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
-		for {
+		for i := 0; ; i++ {
 			select {
 			case d, ok := <-msgs_normal_buffered:
 				if !ok {
@@ -136,7 +136,7 @@ func MainModeSink() {
 				info := domain.FeedSessionStream{}
 				json.Unmarshal(d, &info)
 
-				e := repo.GetRedisMgr().NewLog(context.Background(), true, info.SessionID, string(d))
+				e := repo.GetRedisMgr().NewLog(context.Background(), i%100 == 0, info.SessionID, string(d))
 				if e != nil {
 					log.Println("GetRedisMgr().NewLog: ", e)
 				}

@@ -18,7 +18,7 @@ store:
     # mongo: true
     # redis: true
     size_limit: 1024 # 单个消息大小上限
-    max_count: 5000 # 最多保留的消息数量
+    max_count: 100 # 最多保留的消息数量
 
 debug:
     biz_log_level: 6      # 0. PanicLevel; 1. FatalLevel; 2. ErrorLevel; 3. WarnLevel; 4. InfoLevel; 5. DebugLevel; 6. TraceLevel
