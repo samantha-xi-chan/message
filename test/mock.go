@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	address = "localhost:10051"
+	address = "192.168.31.45:10051"
 
 	SessionID6 = "test"
 )
