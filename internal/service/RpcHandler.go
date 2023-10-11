@@ -59,11 +59,8 @@ func enQueue(amqp_channel *amqp.Channel, queue string, body []byte) {
 			ContentType: "application/json", // 消息内容类型，这里是普通文本
 			Body:        body,               // 消息内容
 		})
-
-	if err == nil {
-		log.Printf("sent:  %s", body)
-	} else {
-		log.Print(err)
+	if err != nil {
+		log.Println("amqp_channel.Publish: ", err)
 	}
 }
 
