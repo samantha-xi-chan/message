@@ -34,6 +34,7 @@ func MainModeWaiter() {
 	if e != nil {
 		log.Fatal("GetDebugMode: ", e)
 	}
+	log.Println("debugOn : ", debugOn)
 
 	if debugOn {
 		addr, e := config.GetDebugPprofWaiter()
@@ -46,20 +47,22 @@ func MainModeWaiter() {
 	}
 
 	v, _ := config.GetDependQueue()
+	log.Println("GetDependQueue : ", v)
 	service.InitProdQueue(v)
 
 	v, _ = config.GetWaiterPortRpc()
-	lis, err := net.Listen("tcp", v)
+	log.Println("GetWaiterPortRpc : ", v)
+	listen, err := net.Listen("tcp", v)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 		return
 	}
 
-	s := grpc.NewServer()
-	pb.RegisterMessageServer(s, &server{})
+	ser := grpc.NewServer()
+	pb.RegisterMessageServer(ser, &server{})
 
-	reflection.Register(s)
-	if err := s.Serve(lis); err != nil {
+	reflection.Register(ser)
+	if err := ser.Serve(listen); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	address = "192.168.31.45:10051"
+	address = "192.168.31.6:30051"
 
 	SessionID6 = "test"
 )
