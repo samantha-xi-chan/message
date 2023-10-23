@@ -4,10 +4,11 @@ import (
 	"flag"
 	"log"
 	"message/cmd"
+	"os"
 	"runtime"
 )
 
-var _mode = flag.String("mode", "empty", "work mode")
+//var _mode =
 
 var (
 	BUILD_DATE = "RandSGVsbG8gV29ypm"
@@ -16,6 +17,7 @@ var (
 )
 
 func main() {
+	modeStr := ""
 	defer func() {
 		if r := recover(); r != nil {
 			log.Println("Recovered:", r)
@@ -30,11 +32,17 @@ func main() {
 	log.Println("GIT_BRANCH: ", GIT_BRANCH)
 	log.Println("GIT_COMMIT: ", GIT_COMMIT)
 
-	flag.Parse()
+	value := os.Getenv("MODE")
+	if value == "" { // config.yaml
+		flag.Parse()
+		modeStr = *flag.String("mode", "empty", "work mode")
+	} else { // k8s
+		modeStr = value
+	}
 
-	log.Println("current mode:", *_mode)
+	log.Println("modeStr: ", modeStr)
 
-	switch *_mode {
+	switch modeStr {
 	case "waiter":
 		cmd.MainModeWaiter()
 	case "notify":
