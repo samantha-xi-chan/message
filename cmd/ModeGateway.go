@@ -26,8 +26,8 @@ func MainModeGateway() {
 		go util_debug.InitPProf(addr)
 	}
 
-	v, _ := config.GetDependMongo()
-	repo.InitMongo(v)
+	//v, _ := config.GetDependMongo()
+	//repo.InitMongo(v)
 
 	redisDsn, e := config.GetDependRedisDsn()
 	if e != nil {
@@ -35,12 +35,12 @@ func MainModeGateway() {
 	}
 	log.Println("redisDsn: ", redisDsn)
 
-	storeMaxCount, e := config.GetStoreMaxCount()
-	if e != nil {
-		log.Fatal("GetStoreMaxCount: ", e)
-	}
+	//storeMaxCount, e := config.GetStoreMaxCount()
+	//if e != nil {
+	//	log.Fatal("GetStoreMaxCount: ", e)
+	//}
+	storeMaxCount := int64(100)
 	log.Println("storeMaxCount: ", storeMaxCount)
-
 	e = repo.InitRedis(context.Background(), redisDsn, storeMaxCount, 0)
 	if e != nil {
 		log.Fatal("InitRedis: ", e)
