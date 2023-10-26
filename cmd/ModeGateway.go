@@ -55,15 +55,15 @@ func MainModeGateway() {
 	//{
 	//	v2.GET("/:session_id", router.FetchSessionV2)
 	//}
-	v1rLog := r.Group("/msg/api/v1/log/session")
+	//v1rLog := r.Group("/msg/api/v1/log/session")
+	//{
+	//	//v1r.GET("/:session_id", router.GetSessionV2)
+	//	v1rLog.GET("/:session_id", router.GetSessionV2) // tmp, GET method don't support reqBody
+	//	v1rLog.POST("/:session_id", router.GetSessionV2)
+	//}
+	v1Log := r.Group("/msg/api/v1/log/session")
 	{
-		//v1r.GET("/:session_id", router.GetSessionV2)
-		v1rLog.GET("/:session_id", router.GetSessionV2) // tmp, GET method don't support reqBody
-		v1rLog.POST("/:session_id", router.GetSessionV2)
-	}
-	v2Log := r.Group("/msg/api/v2/log/session")
-	{
-		v2Log.GET("/:session_id", router.GetSessionV2Log)
+		v1Log.GET("/:session_id", router.GetSessionV2Log)
 	}
 
 	v1rStatus := r.Group("/msg/api/v1/status/session")

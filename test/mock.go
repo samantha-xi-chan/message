@@ -13,15 +13,15 @@ import (
 )
 
 const (
-	address = "192.168.31.6:30051"
-
+	address = "192.168.36.102:30051"
+	//address    = "192.168.31.6:30051"
 	SessionID6 = "test"
 )
 
 func main() {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 9999999; i++ {
 		send()
-		time.Sleep(time.Millisecond * 10)
+		//time.Sleep(time.Millisecond * 10)
 	}
 }
 
