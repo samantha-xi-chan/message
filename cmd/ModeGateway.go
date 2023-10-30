@@ -63,13 +63,13 @@ func MainModeGateway() {
 	//}
 	v1Log := r.Group("/msg/api/v1/log/session")
 	{
-		v1Log.GET("/:session_id", router.GetSessionV2Log)
+		v1Log.GET("/:id", router.GetSessionV1Log)
 	}
 
 	v1rStatus := r.Group("/msg/api/v1/status/session")
 	{
 		//v1r.GET("/:session_id", router.GetSessionV2)
-		v1rStatus.GET("/:session_id", router.GetSessionV2)
+		v1rStatus.GET("/:session_id", router.GetSessionV1Status)
 	}
 
 	val, _ := config.GetGwPortHttp()

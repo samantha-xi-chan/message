@@ -60,8 +60,8 @@ func MainModeSink() {
 	}
 
 	v, _ := config.GetDependQueue()
-	msgs_high, _ := service.QueueConnInit(v, config.EXCHANGE_HIGH)
-	msgs_normal, _ := service.QueueConnInit(v, config.EXCHANGE_NORMAL)
+	msgHighPri, _ := service.QueueConnInit(v, config.EXCHANGE_HIGH)
+	msgNormalPri, _ := service.QueueConnInit(v, config.EXCHANGE_NORMAL)
 
 	//ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_SECOND*time.Second)
 	//defer cancel()
@@ -117,12 +117,12 @@ func MainModeSink() {
 	//}
 	//log.Println(res)
 
-	msgs_normal_buffered := make(chan []byte, 10)
+	msgNormalPriChan := make(chan []byte, 10)
 	go func() {
-		for dd := range msgs_normal {
-			msgs_normal_buffered <- dd.Body
+		for dd := range msgNormalPri {
+			msgNormalPriChan <- dd.Body
 		}
-		close(msgs_normal_buffered)
+		close(msgNormalPriChan)
 	}()
 
 	go func() {
@@ -131,9 +131,9 @@ func MainModeSink() {
 		timer := time.NewTimer(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 		for i := 0; ; i++ {
 			select {
-			case d, ok := <-msgs_normal_buffered:
+			case d, ok := <-msgNormalPriChan:
 				if !ok {
-					log.Println("msgs_high_buffered closed, exiting loop")
+					log.Println("msgNormalPriChan closed, exiting loop")
 					return
 				}
 
@@ -174,21 +174,21 @@ func MainModeSink() {
 	//}
 	//log.Println(res)
 
-	msgs_high_buffered := make(chan []byte, 10)
+	msgHighPriChan := make(chan []byte, 10)
 	go func() {
-		for dd := range msgs_high {
-			msgs_high_buffered <- dd.Body
+		for dd := range msgHighPri {
+			msgHighPriChan <- dd.Body
 		}
-		close(msgs_high_buffered)
+		close(msgHighPriChan)
 	}()
 	go func() {
 		//batchData := []interface{}{}
 		timer := time.NewTimer(config.FLUSH_BUF_TIMEOUT_SEC * time.Second)
 		for {
 			select {
-			case _, ok := <-msgs_high_buffered:
+			case _, ok := <-msgHighPriChan:
 				if !ok {
-					log.Println("msgs_high_buffered closed, exiting loop")
+					log.Println("msgHighPriChan closed, exiting loop")
 					return
 				}
 

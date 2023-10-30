@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func GetSessionV2(c *gin.Context) { // to be deprecated
+func GetSessionV1Status(c *gin.Context) { // to be deprecated
 	ctx := context.Background()
 	sessionId := c.Param("session_id")
 
@@ -67,17 +67,19 @@ func GetSessionV2(c *gin.Context) { // to be deprecated
 	return
 }
 
-func GetSessionV2Log(c *gin.Context) {
+func GetSessionV1Log(c *gin.Context) {
 	ctx := context.Background()
-	sessionId := c.Param("session_id")
+	id := c.Param("id")
 
-	if sessionId == "" {
+	if id == "" {
 		c.JSON(http.StatusOK, apiv2.HttpRespBody{
 			Code: apiv2.ERR_URL_ID,
 			Msg:  "ERR_URL_ID",
 		})
 		return
 	}
+
+	// Upsert Redis KeyValue
 
 	var query apiv2.QueryGetSessionReqForm
 	if err := c.ShouldBindQuery(&query); err != nil {
@@ -93,7 +95,7 @@ func GetSessionV2Log(c *gin.Context) {
 	// todo: check if it really exists
 	// repo.GetRedisMgr().Exists()
 
-	elem, total, e := repo.GetRedisMgr().Query(ctx, true, sessionId, query.TimeAsc, query.PageId, query.PageSize)
+	elem, total, e := repo.GetRedisMgr().Query(ctx, true, id, query.TimeAsc, query.PageId, query.PageSize)
 	if e != nil {
 		c.JSON(http.StatusOK, apiv2.HttpRespBody{
 			Code: apiv2.ERR_OTHER,
