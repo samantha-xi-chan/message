@@ -88,6 +88,20 @@
         historyCountDiv.textContent = `historyCount: ${historyCount}`;
     }
 
+    function formatTimestamp(timestamp) {
+        var date = new Date(timestamp);
+
+        var year = date.getFullYear();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        var hours = String(date.getHours()).padStart(2, '0');
+        var minutes = String(date.getMinutes()).padStart(2, '0');
+        var seconds = String(date.getSeconds()).padStart(2, '0');
+        var milliseconds = date.getMilliseconds();
+
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+    }
+
     // WebSocket configuration
     const host = "192.168.31.6";
     const port = 80;
@@ -158,11 +172,13 @@
                 lastHeartbeatTime = Date.now()
                 updateStatusBar("online, lastHeartbeatTime updated ");
             } else {
-                logToConsoleAndPage(new Date().getTime() + " NewMsg : " + event.data);
+                var formattedDate = formatTimestamp(new Date().getTime());
+                logToConsoleAndPage( formattedDate + " NewMsg : " + event.data);
             }
         };
         ws.onerror = (event) => {
-            logToConsoleAndPage(new Date().getTime() + " NewErr : " + event.data);
+            var formattedDate = formatTimestamp(new Date().getTime());
+            logToConsoleAndPage( formattedDate + " NewErr : " + event.data);
         };
 
         ws.onclose = (event) => {
