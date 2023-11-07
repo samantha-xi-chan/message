@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/streadway/amqp"
 	"log"
+	"message/api"
 	"message/internal/config"
 	"message/internal/domain"
 )
@@ -45,7 +46,10 @@ func OnNewFeed(sessionID string, timestamp int64, feed string) {
 		//fmt.Println("json.Marshal 编码结果: ", string(bytes))
 		enQueue(ch_normal, config.EXCHANGE_NORMAL, bytes)
 	}
+}
 
+func GetSessionStatus(sessionID string) (status int, e error) {
+	return api.TRUE, nil
 }
 
 func enQueue(amqp_channel *amqp.Channel, queue string, body []byte) {

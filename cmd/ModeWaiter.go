@@ -28,6 +28,22 @@ func (s *server) FeedSessionStream(ctx context.Context, in *pb.FeedSessionStream
 	service.OnNewFeed(in.SessionId, in.Timestamp, in.Payload)
 	return &pb.FeedSessionStreamResp{ErrCode: 0, Msg: "OK FeedSessionStream"}, nil
 }
+func (s *server) GetSessionStatus(ctx context.Context, in *pb.GetSessionStatusReq) (*pb.GetSessionStatusResp, error) {
+	log.Printf("GetSessionStatus SessionId: %s  ", in.SessionId)
+	status, e := service.GetSessionStatus(in.SessionId)
+	if e != nil {
+		return &pb.GetSessionStatusResp{
+			Code: 5,
+			Msg:  e.Error(),
+		}, nil
+	}
+
+	return &pb.GetSessionStatusResp{
+		Code: 0,
+		Msg:  "ok",
+		Data: int32(status),
+	}, nil
+}
 
 func MainModeWaiter() {
 	debugOn, e := config.GetDebugMode()
