@@ -6,6 +6,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 	"log"
+	"time"
 )
 
 var err error
@@ -192,4 +193,14 @@ func reverseArray(arr []string) {
 	for i := 0; i < length/2; i++ {
 		arr[i], arr[length-i-1] = arr[length-i-1], arr[i]
 	}
+}
+
+func (mgr *RedisManager) TouchKey(ctx context.Context, key string, val string, timeoutSec int) (bool, error) {
+	_, err := mgr.Client.Set(ctx, key, val, 20*time.Second).Result() // todo: fixit: 动态传入
+	if err != nil {
+		fmt.Println("Error:", err)
+		return false, errors.Wrap(err, ".TouchKey: ")
+	}
+
+	return true, nil
 }

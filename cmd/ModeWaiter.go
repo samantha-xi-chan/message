@@ -7,6 +7,7 @@ import (
 	"log"
 	pb "message/api/proto"
 	"message/internal/config"
+	"message/internal/repo"
 	"message/internal/service"
 	"message/package/util_debug"
 	"net"
@@ -30,7 +31,7 @@ func (s *server) FeedSessionStream(ctx context.Context, in *pb.FeedSessionStream
 }
 func (s *server) GetSessionStatus(ctx context.Context, in *pb.GetSessionStatusReq) (*pb.GetSessionStatusResp, error) {
 	log.Printf("GetSessionStatus SessionId: %s  ", in.SessionId)
-	status, e := service.GetSessionStatus(in.SessionId)
+	status, e := service.GetSessionStatus(ctx, in.SessionId)
 	if e != nil {
 		return &pb.GetSessionStatusResp{
 			Code: 5,
@@ -60,6 +61,18 @@ func MainModeWaiter() {
 
 		log.Println("GetDebugPprofWaiter addr: ", addr)
 		go util_debug.InitPProf(addr)
+	}
+
+	redisDsn, e := config.GetDependRedisDsn()
+	if e != nil {
+		log.Fatal("GetDependRedisDsn: ", e)
+	}
+	log.Println("redisDsn: ", redisDsn)
+	storeMaxCount := int64(100)
+	log.Println("storeMaxCount: ", storeMaxCount)
+	e = repo.InitRedis(context.Background(), redisDsn, storeMaxCount, 0)
+	if e != nil {
+		log.Fatal("InitRedis: ", e)
 	}
 
 	v, _ := config.GetDependQueue()

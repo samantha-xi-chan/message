@@ -1,12 +1,15 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/pkg/errors"
 	"github.com/streadway/amqp"
 	"log"
 	"message/api"
 	"message/internal/config"
 	"message/internal/domain"
+	"message/internal/repo"
 )
 
 var ch_high *amqp.Channel
@@ -48,8 +51,17 @@ func OnNewFeed(sessionID string, timestamp int64, feed string) {
 	}
 }
 
-func GetSessionStatus(sessionID string) (status int, e error) {
-	return api.TRUE, nil
+func GetSessionStatus(ctx context.Context, sessionID string) (status int, e error) {
+	exits, e := repo.GetRedisMgr().Exists(ctx, sessionID)
+	if e != nil {
+		return api.FALSE, errors.Wrap(e, "repo.GetRedisMgr().Exists: ")
+	}
+
+	if exits == true {
+		return api.TRUE, nil
+	} else {
+		return api.FALSE, nil
+	}
 }
 
 func enQueue(amqp_channel *amqp.Channel, queue string, body []byte) {

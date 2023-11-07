@@ -95,6 +95,8 @@ func GetSessionV1Log(c *gin.Context) {
 	// todo: check if it really exists
 	// repo.GetRedisMgr().Exists()
 
+	repo.GetRedisMgr().TouchKey(ctx, id, "", 0)
+
 	elem, total, e := repo.GetRedisMgr().Query(ctx, true, id, query.TimeAsc, query.PageId, query.PageSize)
 	if e != nil {
 		c.JSON(http.StatusOK, apiv2.HttpRespBody{

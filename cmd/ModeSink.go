@@ -46,14 +46,8 @@ func MainModeSink() {
 		log.Fatal("GetDependRedisDsn: ", e)
 	}
 	log.Println("redisDsn: ", redisDsn)
-
-	//storeMaxCount, e := config.GetStoreMaxCount()
-	//if e != nil {
-	//	log.Fatal("GetStoreMaxCount: ", e)
-	//}
 	storeMaxCount := int64(100)
 	log.Println("storeMaxCount: ", storeMaxCount)
-
 	e = repo.InitRedis(context.Background(), redisDsn, storeMaxCount, 0)
 	if e != nil {
 		log.Fatal("InitRedis: ", e)
