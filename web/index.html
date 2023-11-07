@@ -88,38 +88,6 @@
         historyCountDiv.textContent = `historyCount: ${historyCount}`;
     }
 
-function formatTimestamp(timestamp, includeTimeZone = false) {
-  if (isNaN(timestamp)) {
-    return "Invalid Timestamp";
-  }
-
-  var date = new Date(timestamp);
-
-  var year = date.getFullYear();
-  var month = String(date.getMonth() + 1).padStart(2, '0');
-  var day = String(date.getDate()).padStart(2, '0');
-  var hours = String(date.getHours()).padStart(2, '0');
-  var minutes = String(date.getMinutes()).padStart(2, '0');
-  var seconds = String(date.getSeconds()).padStart(2, '0');
-  var milliseconds = String(date.getMilliseconds()).padStart(3, '0');
-
-  var formattedDate = `${year}-${month}-${day}`;
-  var formattedTime = `${hours}:${minutes}:${seconds}.${milliseconds}`;
-
-  if (includeTimeZone) {
-    var timeZoneOffset = -date.getTimezoneOffset();
-    var timeZoneOffsetHours = Math.floor(Math.abs(timeZoneOffset) / 60).toString().padStart(2, '0');
-    var timeZoneOffsetMinutes = (Math.abs(timeZoneOffset) % 60).toString().padStart(2, '0');
-    var timeZoneSign = timeZoneOffset < 0 ? '-' : '+';
-    var timeZoneString = `GMT${timeZoneSign}${timeZoneOffsetHours}:${timeZoneOffsetMinutes}`;
-    
-    return `${formattedDate} ${formattedTime} ${timeZoneString}`;
-  }
-
-  return `${formattedDate} ${formattedTime}`;
-}
-
-
     // WebSocket configuration
     const host = "192.168.31.6";
     const port = 80;
@@ -150,6 +118,8 @@ function formatTimestamp(timestamp, includeTimeZone = false) {
             statusBar.className = "offline";
         }
     }
+
+    connectWebSocket();
 
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
@@ -212,8 +182,41 @@ function formatTimestamp(timestamp, includeTimeZone = false) {
             clearInterval(heartbeatInterval);
         };
     }
+    function formatTimestamp(timestamp, includeTimeZone = false) {
+        if (isNaN(timestamp)) {
+            return "Invalid Timestamp";
+        }
 
-    connectWebSocket();
+        // 将时间戳转换为日期对象
+        var date = new Date(timestamp);
+
+        // 提取日期的年、月、日、小时、分钟、秒和毫秒
+        var year = date.getFullYear();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        var hours = String(date.getHours()).padStart(2, '0');
+        var minutes = String(date.getMinutes()).padStart(2, '0');
+        var seconds = String(date.getSeconds()).padStart(2, '0');
+        var milliseconds = String(date.getMilliseconds()).padStart(3, '0');
+
+        // 格式化日期和时间部分
+        var formattedDate = `${year}-${month}-${day}`;
+        var formattedTime = `${hours}:${minutes}:${seconds}.${milliseconds}`;
+
+        // 如果包含时区信息
+        if (includeTimeZone) {
+            var timeZoneOffset = -date.getTimezoneOffset(); // 负值表示东时区
+            var timeZoneOffsetHours = Math.floor(Math.abs(timeZoneOffset) / 60).toString().padStart(2, '0');
+            var timeZoneOffsetMinutes = (Math.abs(timeZoneOffset) % 60).toString().padStart(2, '0');
+            var timeZoneSign = timeZoneOffset < 0 ? '-' : '+';
+            var timeZoneString = `GMT${timeZoneSign}${timeZoneOffsetHours}:${timeZoneOffsetMinutes}`;
+
+            return `${formattedDate} ${formattedTime} ${timeZoneString}`;
+        }
+
+        // 如果不包含时区信息，只返回日期和时间部分
+        return `${formattedDate} ${formattedTime}`;
+    }
 </script>
 </body>
 </html>
