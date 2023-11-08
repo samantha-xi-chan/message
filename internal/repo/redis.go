@@ -118,13 +118,12 @@ func (mgr *RedisManager) Traversal(ctx context.Context, trim bool, key string, s
 
 func (mgr *RedisManager) Exists(ctx context.Context, key string) (bool, error) {
 
-	exists, err := mgr.Client.Exists(context.Background(), key).Result()
+	exists, err := mgr.Client.Exists(ctx, key).Result()
 	if err != nil {
-		fmt.Println("Error:", err)
 		return false, errors.Wrap(err, ".Exists: ")
 	}
 
-	if exists == 1 {
+	if exists > 0 {
 		return true, nil
 	} else {
 		return false, nil

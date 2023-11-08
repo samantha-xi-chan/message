@@ -31,10 +31,10 @@ func (s *server) FeedSessionStream(ctx context.Context, in *pb.FeedSessionStream
 }
 func (s *server) GetSessionStatus(ctx context.Context, in *pb.GetSessionStatusReq) (*pb.GetSessionStatusResp, error) {
 	log.Printf("GetSessionStatus SessionId: %s  ", in.SessionId)
-	status, e := service.GetSessionStatus(ctx, in.SessionId)
+	status, e := service.GetSessionStatusIsHot(ctx, in.SessionId)
 	if e != nil {
 		return &pb.GetSessionStatusResp{
-			Code: 5,
+			Code: 5, // todo: coding style
 			Msg:  e.Error(),
 		}, nil
 	}

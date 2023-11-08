@@ -51,6 +51,20 @@ func OnNewFeed(sessionID string, timestamp int64, feed string) {
 	}
 }
 
+func GetSessionStatusIsHot(ctx context.Context, sessionID string) (status int, e error) {
+	exist, e := repo.GetRedisMgr().Exists(ctx, sessionID)
+	if e != nil {
+		return api.FALSE, errors.Wrap(e, "repo.GetRedisMgr().Exists: ")
+	}
+
+	log.Printf("sessionID: %s, exist: %d \n", sessionID, exist)
+	if exist == true {
+		return api.TRUE, nil
+	} else {
+		return api.FALSE, nil
+	}
+}
+
 func GetSessionStatus(ctx context.Context, sessionID string) (status int, e error) {
 	exits, e := repo.GetRedisMgr().Exists(ctx, sessionID)
 	if e != nil {
