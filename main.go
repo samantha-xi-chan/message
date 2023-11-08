@@ -4,8 +4,10 @@ import (
 	"flag"
 	"log"
 	"message/cmd"
+	"message/internal/util/util_net"
 	"os"
 	"runtime"
+	"time"
 )
 
 //var _mode =
@@ -15,6 +17,29 @@ var (
 	GIT_BRANCH = "RandBGQg2xzY2FXzGK"
 	GIT_COMMIT = "RandGZFka2xzGFkc2E"
 )
+
+func init() {
+	log.Println("main [init] start ")
+	defer func() {
+		log.Println("main [init] end ")
+	}()
+
+	for true {
+		bAllOK, _ := util_net.CheckTcpService(
+			[]string{
+				"redis-service:6379",
+				"rmq-message:5672",
+			},
+		)
+
+		log.Println("bAllOK: ", bAllOK)
+		if bAllOK {
+			break
+		}
+
+		time.Sleep(time.Second)
+	}
+}
 
 func main() {
 	modeStr := ""
