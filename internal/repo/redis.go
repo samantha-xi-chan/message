@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const SessionHotkeyPrefix = "hot_"
+
 var err error
 
 type RedisManager struct {
@@ -117,8 +119,20 @@ func (mgr *RedisManager) Traversal(ctx context.Context, trim bool, key string, s
 }
 
 func (mgr *RedisManager) Exists(ctx context.Context, key string) (bool, error) {
-
 	exists, err := mgr.Client.Exists(ctx, key).Result()
+	if err != nil {
+		return false, errors.Wrap(err, ".Exists: ")
+	}
+
+	if exists > 0 {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+func (mgr *RedisManager) ExistsIsHot(ctx context.Context, key string) (bool, error) {
+	exists, err := mgr.Client.Exists(ctx, SessionHotkeyPrefix+key).Result()
 	if err != nil {
 		return false, errors.Wrap(err, ".Exists: ")
 	}
@@ -194,8 +208,8 @@ func reverseArray(arr []string) {
 	}
 }
 
-func (mgr *RedisManager) TouchKey(ctx context.Context, key string, val string, timeoutSec int) (bool, error) {
-	_, err := mgr.Client.Set(ctx, key, val, 20*time.Second).Result() // todo: fixit: 动态传入
+func (mgr *RedisManager) TouchKeyHot(ctx context.Context, key string, val string, timeoutSec int) (bool, error) {
+	_, err := mgr.Client.Set(ctx, SessionHotkeyPrefix+key, val, 20*time.Second).Result() // todo: fixit: 动态传入
 	if err != nil {
 		fmt.Println("Error:", err)
 		return false, errors.Wrap(err, ".TouchKey: ")

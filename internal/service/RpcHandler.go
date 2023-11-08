@@ -52,7 +52,7 @@ func OnNewFeed(sessionID string, timestamp int64, feed string) {
 }
 
 func GetSessionStatusIsHot(ctx context.Context, sessionID string) (status int, e error) {
-	exist, e := repo.GetRedisMgr().Exists(ctx, sessionID)
+	exist, e := repo.GetRedisMgr().ExistsIsHot(ctx, sessionID)
 	if e != nil {
 		return api.FALSE, errors.Wrap(e, "repo.GetRedisMgr().Exists: ")
 	}
