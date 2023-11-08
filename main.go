@@ -27,7 +27,7 @@ func init() {
 	for true {
 		bAllOK, _ := util_net.CheckTcpService(
 			[]string{
-				"redis-service:6379",
+				"redis-service:6379", // todo: coding style
 				"rmq-message:5672",
 			},
 		)
