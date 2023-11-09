@@ -120,6 +120,12 @@
     connectWebSocket();
 
     function connectWebSocket() {
+        console.log("userAgent：" + navigator.userAgent);
+        console.log("language：" + navigator.language);
+        console.log("window.innerWidth：" +  window.innerWidth);
+        console.log("window.innerHeight：" + window.innerHeight);
+        console.log("platform：" + navigator.platform);
+
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
