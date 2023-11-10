@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"message/apiv2"
+	"message/internal/config"
 	"message/internal/repo"
 	"message/package/util_struct"
 	"net/http"
@@ -95,7 +96,7 @@ func GetSessionV1Log(c *gin.Context) {
 	// todo: check if it really exists
 	// repo.GetRedisMgr().Exists()
 
-	repo.GetRedisMgr().TouchKeyHot(ctx, id, "", 0)
+	repo.GetRedisMgr().TouchKeyHot(ctx, id, "", config.SessionWatcherTimeoutSecond)
 
 	elem, total, e := repo.GetRedisMgr().Query(ctx, true, id, query.TimeAsc, query.PageId, query.PageSize)
 	if e != nil {

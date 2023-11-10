@@ -209,7 +209,7 @@ func reverseArray(arr []string) {
 }
 
 func (mgr *RedisManager) TouchKeyHot(ctx context.Context, key string, val string, timeoutSec int) (bool, error) {
-	_, err := mgr.Client.Set(ctx, SessionHotkeyPrefix+key, val, 20*time.Second).Result() // todo: fixit: 动态传入
+	_, err := mgr.Client.Set(ctx, SessionHotkeyPrefix+key, val, time.Duration(timeoutSec)*time.Second).Result() // todo: fixit: 动态传入
 	if err != nil {
 		fmt.Println("Error:", err)
 		return false, errors.Wrap(err, ".TouchKey: ")

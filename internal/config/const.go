@@ -16,3 +16,5 @@ const (
 	BATCH_SIZE            = 100
 	FLUSH_BUF_TIMEOUT_SEC = 1
 )
+
+const SessionWatcherTimeoutSecond = 60
