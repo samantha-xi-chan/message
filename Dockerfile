@@ -13,6 +13,6 @@ RUN cd /app/src && \
 FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/main /app/main
-EXPOSE 80 1080 2080 8081
+EXPOSE 10051 9102 18081
 CMD ["./main"]
 
