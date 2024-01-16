@@ -247,6 +247,17 @@
         });
     }
 
+    function hashStringToIntV(str) {
+        let hash = 0;
+
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+        }
+
+        return hash & 0xFFFFFFFF;
+    }
+
     function getRandomColor(jsonString) {
         return new Promise((resolve, reject) => {
             try {
@@ -254,20 +265,13 @@
                 const sessionId = jsonData.session_id;
                 console.log("sessionId: ", sessionId);
 
-                hashStringToInt(sessionId)
-                    .then(hashedInt => {
-                        console.log("hashedInt: ", hashedInt);
+                hashedInt = hashStringToIntV(sessionId)
+                var red = (hashedInt >> 16) & 0xFF;
+                var green = (hashedInt >> 8) & 0xFF;
+                var blue = hashedInt & 0xFF;
+                const color = `rgb(${red}, ${green}, ${blue})`;
 
-                        var red = (hashedInt >> 16) & 0xFF;
-                        var green = (hashedInt >> 8) & 0xFF;
-                        var blue = hashedInt & 0xFF;
-                        const color = `rgb(${red}, ${green}, ${blue})`;
-                        resolve(color);
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        reject(error);
-                    });
+                resolve(color);
             } catch (error) {
                 console.error("JSON parse error:", error);
                 reject(error);
