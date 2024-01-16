@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -57,11 +58,12 @@
     const maxMessageCount = 50; // Set a maximum message count
 
     // Function to log messages to the console and display them on the page
-    function logToConsoleAndPage(message) {
+    function logToConsoleAndPage(message,textColor) {
         const consoleOutputDiv = document.getElementById("console-output");
 
         const messageDiv = document.createElement("div");
         messageDiv.innerText =  message;
+        messageDiv.style.color = textColor || 'black'; // Default to black if no color is specified
 
         messageCount++;
         historyCount++;
@@ -164,8 +166,14 @@
                 lastHeartbeatTime = Date.now()
                 updateStatusBar("online, lastHeartbeatTime updated ");
             } else {
-                var formattedDate = formatTimestamp(new Date().getTime());
-                logToConsoleAndPage( formattedDate + " NewMsg : " + event.data);
+                getRandomColor(event.data)
+                    .then(color => {
+                        var formattedDate = formatTimestamp(new Date().getTime());
+                        logToConsoleAndPage( formattedDate + " NewMsg : " + event.data, color);
+                    })
+                    .catch(error => {
+                        console.error("Error generating color:", error);
+                    });
             }
         };
         ws.onerror = (event) => {
@@ -215,6 +223,50 @@
 
         return `${formattedDate} ${formattedTime}`;
     }
+
+    async function hashStringToInt(inputString) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(inputString);
+
+        const buffer = await crypto.subtle.digest('SHA-256', data);
+
+        const truncatedBuffer = buffer.slice(0, 4);
+
+        const hashArray = Array.from(new Uint8Array(truncatedBuffer));
+        const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+
+        const hashInt = parseInt(hashHex, 16);
+
+        return hashInt;
+    }
+
+    function getRandomColor(jsonString) {
+        return new Promise((resolve, reject) => {
+            try {
+                const jsonData = JSON.parse(jsonString);
+                const sessionId = jsonData.session_id;
+
+                hashStringToInt(sessionId)
+                    .then(hashedInt => {
+                        console.log("hashedInt: ", hashedInt);
+
+                        var red = (hashedInt >> 16) & 0xFF;
+                        var green = (hashedInt >> 8) & 0xFF;
+                        var blue = hashedInt & 0xFF;
+                        const color = `rgb(${red}, ${green}, ${blue})`;
+                        resolve(color);
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        reject(error);
+                    });
+            } catch (error) {
+                console.error("JSON parse error:", error);
+                reject(error);
+            }
+        });
+    }
+
 </script>
 </body>
 </html>
