@@ -245,6 +245,7 @@
             try {
                 const jsonData = JSON.parse(jsonString);
                 const sessionId = jsonData.session_id;
+                console.log("sessionId: ", sessionId);
 
                 hashStringToInt(sessionId)
                     .then(hashedInt => {
