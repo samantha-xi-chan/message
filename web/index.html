@@ -94,7 +94,7 @@
     const host = "default.host";
     const port = 80;
     const topic = "*";
-    const currentHost = window.location.hostname || window.location.host || host;
+    const currentHost = window.location.hostname || window.location.host || host; // "192.168.31.45"; //
     logToConsoleAndPage( "currentHost：" +  currentHost )
     const wsUrl = `ws://${currentHost}:30102/api/v1/socket`;
 
@@ -224,20 +224,27 @@
         return `${formattedDate} ${formattedTime}`;
     }
 
-    async function hashStringToInt(inputString) {
+    function hashStringToInt(inputString) {
+        return new Promise((resolve, reject) => {
         const encoder = new TextEncoder();
         const data = encoder.encode(inputString);
 
-        const buffer = await crypto.subtle.digest('SHA-256', data);
+        crypto.subtle.digest('SHA-256', data)
+            .then(buffer => {
+                const truncatedBuffer = buffer.slice(0, 4);
 
-        const truncatedBuffer = buffer.slice(0, 4);
+                const hashArray = Array.from(new Uint8Array(truncatedBuffer));
+                const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 
-        const hashArray = Array.from(new Uint8Array(truncatedBuffer));
-        const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+                const hashInt = parseInt(hashHex, 16);
+                resolve(hashInt);
+            })
+            .catch(error => {
+                console.error(error);
+                reject(error);
+            });
 
-        const hashInt = parseInt(hashHex, 16);
-
-        return hashInt;
+        });
     }
 
     function getRandomColor(jsonString) {
