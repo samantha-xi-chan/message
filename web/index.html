@@ -95,7 +95,9 @@
     const port = 80;
     const topic = "*";
     const currentHost = window.location.hostname || window.location.host || host; // "192.168.31.45"; //
-    logToConsoleAndPage( "currentHost：" +  currentHost )
+    const timeZoneOffsetInHours = new Date().getTimezoneOffset() / 60;
+    const language = navigator.language || navigator.userLanguage;
+    logToConsoleAndPage( "currentHost：" + currentHost + "   ,    timeZoneOffsetInHours：" + timeZoneOffsetInHours + "   ,   currentLanguage：" + language)
     const wsUrl = `ws://${currentHost}:30102/api/v1/socket`;
 
     const HEARTBEAT_INTERVAL = 2000;
